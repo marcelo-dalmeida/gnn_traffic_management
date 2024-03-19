@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2023-09-14 19:56:43 by Eclipse SUMO netedit Version 1.18.0
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <!-- Routes -->
+    <vType id="emv" vClass="emergency" guiShape="emergency">
+        <param key="has.bluelight.device" value="true"/>
+    </vType>
+
+    <trip id="emv_1" type="emv" depart="08:00:00" departLane="best" departSpeed="max" from="-11729090" to="E4.26" via="-335532207#3 335532208#0 24864540#0 24864541 28727103#0 28727103#0.110 28727103#4 11834237#0 11834237#1 625479007#0 625479007#0.42 625479007#1 625479007#2 625479007#4 11737884#0 11737884#1 11737884#3 625866890 293149229#0 293149229#1 293149229#2 293149229#3 293149229#4 625866891#0 625866891#2 293149228#0 293149228#1 402298704#0 302191269 E1 E4"/>
+</routes>

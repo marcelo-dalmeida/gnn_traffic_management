@@ -1,0 +1,42 @@
+<!-- generated on 2023-01-27 13:15:51 by Eclipse SUMO sumo Version 1.14.1
+-->
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+  <input>
+    <net-file value="osm.net.xml"/>
+    <route-files value="traffic_flow.rou.xml,bus_trips.rou.xml,passenger_trips.rou.xml"/>
+    <additional-files value="osm.poly.xml,bus_stops.add.xml,tls_switching_table.add.xml,             school_zone_speed_sign.add.xml"/>
+    <!-- extra/bus_stop_detectors/bus_stop_detectors.add.xml -->
+    <!-- extra/vehicle_count_validation_detectors/vehicle_count_detectors_all_lanes.add.xml -->
+  </input>
+  <time>
+    <begin value="0"/>
+    <end value="86400"/>
+  </time>
+  <output>
+    <save-state.transportables value="true"/>
+  </output>
+  <processing>
+    <ignore-route-errors value="true"/>
+    <ignore-junction-blocker value="60"/>
+    <collision.action value="warn"/>
+    <lateral-resolution value="0.5"/>
+  </processing>
+  <routing>
+    <device.rerouting.probability value="0.3"/>
+    <device.rerouting.threads value="10"/>
+    <device.rerouting.pre-period value="3600"/>
+    <device.rerouting.period value="60"/>
+    <device.rerouting.adaptation-interval value="15"/>
+    <device.rerouting.adaptation-steps value="60"/>
+  </routing>
+  <report>
+    <verbose value="true"/>
+    <no-warnings value="true"/>
+    <duration-log.statistics value="true"/>
+    <no-step-log value="true"/>
+    <error-log value="./error.log"/>
+  </report>
+  <gui_only>
+    <gui-settings-file value="osm.view.xml"/>
+  </gui_only>
+</configuration>

@@ -1,0 +1,12 @@
+{
+    "BUS_LINES_FILE": "extra/buslines.xml",
+    "BUS_STOPS_FILE": "bus_stops.add.xml",
+    "BUS_TRIPS_FILE": "bus_trips.rou.xml",
+    "CAR_TRIPS_FILE": "traffic_flow.rou.xml",
+    "CONFIGURATION_FILE": "osm.sumocfg",
+    "HAS_BUSES": true,
+    "HAS_PASSENGERS": true,
+    "MULTI_INTERSECTION_TL_FILE": "extra/osm__multi_intersection_tl.json",
+    "NET_FILE": "osm.net.xml",
+    "PASSENGER_TRIPS_FILE": "passenger_trips.rou.xml"
+}

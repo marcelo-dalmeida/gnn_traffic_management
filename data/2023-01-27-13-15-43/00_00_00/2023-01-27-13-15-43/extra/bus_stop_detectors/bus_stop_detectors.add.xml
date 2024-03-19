@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2023-03-01 08:07:46 by Eclipse SUMO netedit Version 1.14.1
+-->
+
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <e1Detector id="e1_0" lane="-292851770#0_0" pos="314.72" period="3600.00" file="e1_0.xml">
+        <param key="bus_stop" value="bs_0"/>
+    </e1Detector>
+    <e1Detector id="e1_1" lane="625361998#4_1" pos="163.47" period="3600.00" file="e1_1.xml">
+        <param key="bus_stop" value="bs_1"/>
+    </e1Detector>
+    <e1Detector id="e1_10" lane="625851681#0_0" pos="154.74" period="3600.00" file="e1_10.xml">
+        <param key="bus_stop" value="bs_4"/>
+    </e1Detector>
+    <e1Detector id="e1_100" lane="294294299#7_2" pos="85.93" period="3600.00" file="e1_100.xml">
+        <param key="bus_stop" value="bs_28"/>
+    </e1Detector>
+    <e1Detector id="e1_101" lane="294294299#8_0" pos="76.77" period="3600.00" file="e1_101.xml">
+        <param key="bus_stop" value="bs_29"/>
+    </e1Detector>
+    <e1Detector id="e1_102" lane="294294299#8_1" pos="76.77" period="3600.00" file="e1_102.xml">
+        <param key="bus_stop" value="bs_29"/>
+    </e1Detector>
+    <e1Detector id="e1_103" lane="714429624#0_0" pos="15.17" period="3600.00" file="e1_103.xml">
+        <param key="bus_stop" value="bs_30"/>
+    </e1Detector>
+    <e1Detector id="e1_104" lane="294294299#8_2" pos="76.77" period="3600.00" file="e1_104.xml">
+        <param key="bus_stop" value="bs_29"/>
+    </e1Detector>
+    <e1Detector id="e1_105" lane="714429624#0_1" pos="15.17" period="3600.00" file="e1_105.xml">
+        <param key="bus_stop" value="bs_30"/>
+    </e1Detector>
+    <e1Detector id="e1_106" lane="714429624#0_2" pos="15.17" period="3600.00" file="e1_106.xml">
+        <param key="bus_stop" value="bs_30"/>
+    </e1Detector>
+    <e1Detector id="e1_107" lane="714429624#0.162_0" pos="189.94" period="3600.00" file="e1_107.xml">
+        <param key="bus_stop" value="bs_32"/>
+    </e1Detector>
+    <e1Detector id="e1_108" lane="714429624#0.162_1" pos="189.94" period="3600.00" file="e1_108.xml">
+        <param key="bus_stop" value="bs_32"/>
+    </e1Detector>
+    <e1Detector id="e1_109" lane="714429624#0.162_2" pos="189.94" period="3600.00" file="e1_109.xml">
+        <param key="bus_stop" value="bs_32"/>
+    </e1Detector>
+    <e1Detector id="e1_11" lane="625851681#0_1" pos="154.74" period="3600.00" file="e1_11.xml">
+        <param key="bus_stop" value="bs_4"/>
+    </e1Detector>
+    <e1Detector id="e1_110" lane="913305096_0" pos="0.82" period="3600.00" file="e1_110.xml">
+        <param key="bus_stop" value="bs_31"/>
+    </e1Detector>
+    <e1Detector id="e1_111" lane="913305096_1" pos="0.82" period="3600.00" file="e1_111.xml">
+        <param key="bus_stop" value="bs_31"/>
+    </e1Detector>
+    <e1Detector id="e1_112" lane="913305096_2" pos="0.82" period="3600.00" file="e1_112.xml">
+        <param key="bus_stop" value="bs_31"/>
+    </e1Detector>
+    <e1Detector id="e1_113" lane="913305096_3" pos="0.82" period="3600.00" file="e1_113.xml">
+        <param key="bus_stop" value="bs_31"/>
+    </e1Detector>
+    <e1Detector id="e1_114" lane="11834237#0_0" pos="19.96" period="3600.00" file="e1_114.xml">
+        <param key="bus_stop" value="bs_39"/>
+    </e1Detector>
+    <e1Detector id="e1_115" lane="11834237#0_1" pos="19.96" period="3600.00" file="e1_115.xml">
+        <param key="bus_stop" value="bs_39"/>
+    </e1Detector>
+    <e1Detector id="e1_116" lane="28727103#0.110_1" pos="46.43" period="3600.00" file="e1_116.xml">
+        <param key="bus_stop" value="bs_33"/>
+    </e1Detector>
+    <e1Detector id="e1_117" lane="28727103#0.110_0" pos="46.43" period="3600.00" file="e1_117.xml">
+        <param key="bus_stop" value="bs_33"/>
+    </e1Detector>
+    <e1Detector id="e1_118" lane="-28727103#3_0" pos="154.34" period="3600.00" file="e1_118.xml">
+        <param key="bus_stop" value="bs_34"/>
+    </e1Detector>
+    <e1Detector id="e1_119" lane="-28727103#3_1" pos="154.34" period="3600.00" file="e1_119.xml">
+        <param key="bus_stop" value="bs_34"/>
+    </e1Detector>
+    <e1Detector id="e1_12" lane="11955884#0_0" pos="99.65" period="3600.00" file="e1_12.xml">
+        <param key="bus_stop" value="bs_48"/>
+    </e1Detector>
+    <e1Detector id="e1_120" lane="24864541_0" pos="241.11" period="3600.00" file="e1_120.xml">
+        <param key="bus_stop" value="bs_35"/>
+    </e1Detector>
+    <e1Detector id="e1_121" lane="335532208#0_0" pos="23.21" period="3600.00" file="e1_121.xml">
+        <param key="bus_stop" value="bs_37"/>
+    </e1Detector>
+    <e1Detector id="e1_122" lane="335532207#0_0" pos="13.33" period="3600.00" file="e1_122.xml">
+        <param key="bus_stop" value="bs_36"/>
+    </e1Detector>
+    <e1Detector id="e1_123" lane="-11837579#6_0" pos="13.39" period="3600.00" file="e1_123.xml">
+        <param key="bus_stop" value="bs_38"/>
+    </e1Detector>
+    <e1Detector id="e1_124" lane="-625479007#2_0" pos="93.69" period="3600.00" file="e1_124.xml">
+        <param key="bus_stop" value="bs_9"/>
+    </e1Detector>
+    <e1Detector id="e1_125" lane="-11737884#0_0" pos="108.65" period="3600.00" file="e1_125.xml">
+        <param key="bus_stop" value="bs_11"/>
+    </e1Detector>
+    <e1Detector id="e1_126" lane="-11737884#3_0" pos="112.90" period="3600.00" file="e1_126.xml">
+        <param key="bus_stop" value="bs_14"/>
+    </e1Detector>
+    <e1Detector id="e1_127" lane="-293149229#0_0" pos="9.92" period="3600.00" file="e1_127.xml">
+        <param key="bus_stop" value="bs_15"/>
+    </e1Detector>
+    <e1Detector id="e1_128" lane="-293149229#3_0" pos="4.85" period="3600.00" file="e1_128.xml">
+        <param key="bus_stop" value="bs_17"/>
+    </e1Detector>
+    <e1Detector id="e1_129" lane="-293149229#4_0" pos="18.27" period="3600.00" file="e1_129.xml">
+        <param key="bus_stop" value="bs_19"/>
+    </e1Detector>
+    <e1Detector id="e1_13" lane="-625851681#2_0" pos="158.03" period="3600.00" file="e1_13.xml">
+        <param key="bus_stop" value="bs_5"/>
+    </e1Detector>
+    <e1Detector id="e1_130" lane="-293149228#0_0" pos="129.32" period="3600.00" file="e1_130.xml">
+        <param key="bus_stop" value="bs_20"/>
+    </e1Detector>
+    <e1Detector id="e1_131" lane="-293149228#0_1" pos="129.32" period="3600.00" file="e1_131.xml">
+        <param key="bus_stop" value="bs_20"/>
+    </e1Detector>
+    <e1Detector id="e1_133" lane="-402298704#0_0" pos="58.36" period="3600.00" file="e1_133.xml">
+        <param key="bus_stop" value="bs_23"/>
+    </e1Detector>
+    <e1Detector id="e1_14" lane="-625851681#2_1" pos="158.03" period="3600.00" file="e1_14.xml">
+        <param key="bus_stop" value="bs_5"/>
+    </e1Detector>
+    <e1Detector id="e1_15" lane="-966308107#4.442_0" pos="1.36" period="3600.00" file="e1_15.xml">
+        <param key="bus_stop" value="bs_45"/>
+    </e1Detector>
+    <e1Detector id="e1_16" lane="-966308107#4.442_1" pos="1.36" period="3600.00" file="e1_16.xml">
+        <param key="bus_stop" value="bs_45"/>
+    </e1Detector>
+    <e1Detector id="e1_17" lane="11960711#0_0" pos="50.78" period="3600.00" file="e1_17.xml">
+        <param key="bus_stop" value="bs_46"/>
+    </e1Detector>
+    <e1Detector id="e1_18" lane="28727096#1_0" pos="89.87" period="3600.00" file="e1_18.xml">
+        <param key="bus_stop" value="bs_7"/>
+    </e1Detector>
+    <e1Detector id="e1_19" lane="28727096#1_1" pos="89.87" period="3600.00" file="e1_19.xml">
+        <param key="bus_stop" value="bs_7"/>
+    </e1Detector>
+    <e1Detector id="e1_2" lane="-292851770#0_1" pos="314.72" period="3600.00" file="e1_2.xml">
+        <param key="bus_stop" value="bs_0"/>
+    </e1Detector>
+    <e1Detector id="e1_20" lane="-625479007#0_0" pos="49.37" period="3600.00" file="e1_20.xml">
+        <param key="bus_stop" value="bs_8"/>
+    </e1Detector>
+    <e1Detector id="e1_21" lane="11834237#1_0" pos="189.48" period="3600.00" file="e1_21.xml">
+        <param key="bus_stop" value="bs_41"/>
+    </e1Detector>
+    <e1Detector id="e1_22" lane="11834237#1_1" pos="189.48" period="3600.00" file="e1_22.xml">
+        <param key="bus_stop" value="bs_41"/>
+    </e1Detector>
+    <e1Detector id="e1_23" lane="-28727096#0_0" pos="124.24" period="3600.00" file="e1_23.xml">
+        <param key="bus_stop" value="bs_6"/>
+    </e1Detector>
+    <e1Detector id="e1_24" lane="-28727096#0_1" pos="124.24" period="3600.00" file="e1_24.xml">
+        <param key="bus_stop" value="bs_6"/>
+    </e1Detector>
+    <e1Detector id="e1_25" lane="625479007#0_1" pos="9.20" period="3600.00" file="e1_25.xml">
+        <param key="bus_stop" value="bs_8"/>
+    </e1Detector>
+    <e1Detector id="e1_26" lane="625479007#0_0" pos="9.20" period="3600.00" file="e1_26.xml">
+        <param key="bus_stop" value="bs_8"/>
+    </e1Detector>
+    <e1Detector id="e1_27" lane="625479007#1_0" pos="85.53" period="3600.00" file="e1_27.xml">
+        <param key="bus_stop" value="bs_10"/>
+    </e1Detector>
+    <e1Detector id="e1_28" lane="625479007#1_1" pos="85.53" period="3600.00" file="e1_28.xml">
+        <param key="bus_stop" value="bs_10"/>
+    </e1Detector>
+    <e1Detector id="e1_29" lane="625479007#1_2" pos="85.53" period="3600.00" file="e1_29.xml">
+        <param key="bus_stop" value="bs_10"/>
+    </e1Detector>
+    <e1Detector id="e1_3" lane="625361998#4_0" pos="163.47" period="3600.00" file="e1_3.xml">
+        <param key="bus_stop" value="bs_1"/>
+    </e1Detector>
+    <e1Detector id="e1_30" lane="625479007#1_3" pos="85.53" period="3600.00" file="e1_30.xml">
+        <param key="bus_stop" value="bs_10"/>
+    </e1Detector>
+    <e1Detector id="e1_31" lane="625479007#2_0" pos="10.94" period="3600.00" file="e1_31.xml">
+        <param key="bus_stop" value="bs_9"/>
+    </e1Detector>
+    <e1Detector id="e1_32" lane="625479007#2_1" pos="10.94" period="3600.00" file="e1_32.xml">
+        <param key="bus_stop" value="bs_9"/>
+    </e1Detector>
+    <e1Detector id="e1_33" lane="625479007#2_2" pos="10.94" period="3600.00" file="e1_33.xml">
+        <param key="bus_stop" value="bs_9"/>
+    </e1Detector>
+    <e1Detector id="e1_34" lane="625479007#2_3" pos="10.94" period="3600.00" file="e1_34.xml">
+        <param key="bus_stop" value="bs_9"/>
+    </e1Detector>
+    <e1Detector id="e1_35" lane="11737884#0_0" pos="10.59" period="3600.00" file="e1_35.xml">
+        <param key="bus_stop" value="bs_11"/>
+    </e1Detector>
+    <e1Detector id="e1_36" lane="11737884#0_1" pos="10.59" period="3600.00" file="e1_36.xml">
+        <param key="bus_stop" value="bs_11"/>
+    </e1Detector>
+    <e1Detector id="e1_37" lane="11737884#0_2" pos="10.59" period="3600.00" file="e1_37.xml">
+        <param key="bus_stop" value="bs_11"/>
+    </e1Detector>
+    <e1Detector id="e1_38" lane="11737884#0_3" pos="10.59" period="3600.00" file="e1_38.xml">
+        <param key="bus_stop" value="bs_11"/>
+    </e1Detector>
+    <e1Detector id="e1_39" lane="11737884#0_0" pos="108.11" period="3600.00" file="e1_39.xml">
+        <param key="bus_stop" value="bs_12"/>
+    </e1Detector>
+    <e1Detector id="e1_4" lane="625361998#3_1" pos="10.69" period="3600.00" file="e1_4.xml">
+        <param key="bus_stop" value="bs_2"/>
+    </e1Detector>
+    <e1Detector id="e1_40" lane="11737884#0_1" pos="108.11" period="3600.00" file="e1_40.xml">
+        <param key="bus_stop" value="bs_12"/>
+    </e1Detector>
+    <e1Detector id="e1_41" lane="11737884#0_2" pos="108.11" period="3600.00" file="e1_41.xml">
+        <param key="bus_stop" value="bs_12"/>
+    </e1Detector>
+    <e1Detector id="e1_42" lane="11737884#0_3" pos="108.11" period="3600.00" file="e1_42.xml">
+        <param key="bus_stop" value="bs_12"/>
+    </e1Detector>
+    <e1Detector id="e1_43" lane="11737884#1_0" pos="110.72" period="3600.00" file="e1_43.xml">
+        <param key="bus_stop" value="bs_13"/>
+    </e1Detector>
+    <e1Detector id="e1_44" lane="11737884#1_1" pos="110.72" period="3600.00" file="e1_44.xml">
+        <param key="bus_stop" value="bs_13"/>
+    </e1Detector>
+    <e1Detector id="e1_45" lane="11737884#1_2" pos="110.72" period="3600.00" file="e1_45.xml">
+        <param key="bus_stop" value="bs_13"/>
+    </e1Detector>
+    <e1Detector id="e1_46" lane="11737884#1_3" pos="110.72" period="3600.00" file="e1_46.xml">
+        <param key="bus_stop" value="bs_13"/>
+    </e1Detector>
+    <e1Detector id="e1_47" lane="11737884#3_3" pos="10.44" period="3600.00" file="e1_47.xml">
+        <param key="bus_stop" value="bs_14"/>
+    </e1Detector>
+    <e1Detector id="e1_48" lane="11737884#3_2" pos="10.44" period="3600.00" file="e1_48.xml">
+        <param key="bus_stop" value="bs_14"/>
+    </e1Detector>
+    <e1Detector id="e1_49" lane="11737884#3_1" pos="10.44" period="3600.00" file="e1_49.xml">
+        <param key="bus_stop" value="bs_14"/>
+    </e1Detector>
+    <e1Detector id="e1_5" lane="625361998#3_0" pos="10.69" period="3600.00" file="e1_5.xml">
+        <param key="bus_stop" value="bs_2"/>
+    </e1Detector>
+    <e1Detector id="e1_50" lane="11737884#3_0" pos="10.44" period="3600.00" file="e1_50.xml">
+        <param key="bus_stop" value="bs_14"/>
+    </e1Detector>
+    <e1Detector id="e1_51" lane="625866890_0" pos="36.67" period="3600.00" file="e1_51.xml">
+        <param key="bus_stop" value="bs_16"/>
+    </e1Detector>
+    <e1Detector id="e1_52" lane="625866890_1" pos="36.67" period="3600.00" file="e1_52.xml">
+        <param key="bus_stop" value="bs_16"/>
+    </e1Detector>
+    <e1Detector id="e1_53" lane="625866890_2" pos="36.67" period="3600.00" file="e1_53.xml">
+        <param key="bus_stop" value="bs_16"/>
+    </e1Detector>
+    <e1Detector id="e1_54" lane="625866890_3" pos="36.67" period="3600.00" file="e1_54.xml">
+        <param key="bus_stop" value="bs_16"/>
+    </e1Detector>
+    <e1Detector id="e1_55" lane="293149229#0_3" pos="10.75" period="3600.00" file="e1_55.xml">
+        <param key="bus_stop" value="bs_15"/>
+    </e1Detector>
+    <e1Detector id="e1_56" lane="293149229#0_2" pos="10.75" period="3600.00" file="e1_56.xml">
+        <param key="bus_stop" value="bs_15"/>
+    </e1Detector>
+    <e1Detector id="e1_57" lane="293149229#0_1" pos="10.75" period="3600.00" file="e1_57.xml">
+        <param key="bus_stop" value="bs_15"/>
+    </e1Detector>
+    <e1Detector id="e1_58" lane="293149229#0_0" pos="10.75" period="3600.00" file="e1_58.xml">
+        <param key="bus_stop" value="bs_15"/>
+    </e1Detector>
+    <e1Detector id="e1_59" lane="293149229#2_0" pos="1.17" period="3600.00" file="e1_59.xml">
+        <param key="bus_stop" value="bs_18"/>
+    </e1Detector>
+    <e1Detector id="e1_6" lane="-625361998#3.164_0" pos="158.10" period="3600.00" file="e1_6.xml">
+        <param key="bus_stop" value="bs_3"/>
+    </e1Detector>
+    <e1Detector id="e1_60" lane="293149229#2_1" pos="1.17" period="3600.00" file="e1_60.xml">
+        <param key="bus_stop" value="bs_18"/>
+    </e1Detector>
+    <e1Detector id="e1_61" lane="293149229#2_2" pos="1.17" period="3600.00" file="e1_61.xml">
+        <param key="bus_stop" value="bs_18"/>
+    </e1Detector>
+    <e1Detector id="e1_62" lane="293149229#2_3" pos="1.17" period="3600.00" file="e1_62.xml">
+        <param key="bus_stop" value="bs_18"/>
+    </e1Detector>
+    <e1Detector id="e1_63" lane="293149229#3_1" pos="10.70" period="3600.00" file="e1_63.xml">
+        <param key="bus_stop" value="bs_17"/>
+    </e1Detector>
+    <e1Detector id="e1_64" lane="293149229#3_0" pos="10.70" period="3600.00" file="e1_64.xml">
+        <param key="bus_stop" value="bs_17"/>
+    </e1Detector>
+    <e1Detector id="e1_65" lane="293149229#3_2" pos="10.70" period="3600.00" file="e1_65.xml">
+        <param key="bus_stop" value="bs_17"/>
+    </e1Detector>
+    <e1Detector id="e1_66" lane="293149229#3_3" pos="10.70" period="3600.00" file="e1_66.xml">
+        <param key="bus_stop" value="bs_17"/>
+    </e1Detector>
+    <e1Detector id="e1_67" lane="293149229#4_3" pos="97.55" period="3600.00" file="e1_67.xml">
+        <param key="bus_stop" value="bs_19"/>
+    </e1Detector>
+    <e1Detector id="e1_68" lane="293149229#4_2" pos="97.55" period="3600.00" file="e1_68.xml">
+        <param key="bus_stop" value="bs_19"/>
+    </e1Detector>
+    <e1Detector id="e1_69" lane="293149229#4_1" pos="97.55" period="3600.00" file="e1_69.xml">
+        <param key="bus_stop" value="bs_19"/>
+    </e1Detector>
+    <e1Detector id="e1_7" lane="-625361998#3.164_1" pos="158.10" period="3600.00" file="e1_7.xml">
+        <param key="bus_stop" value="bs_3"/>
+    </e1Detector>
+    <e1Detector id="e1_70" lane="293149229#4_0" pos="97.55" period="3600.00" file="e1_70.xml">
+        <param key="bus_stop" value="bs_19"/>
+    </e1Detector>
+    <e1Detector id="e1_71" lane="11694981#7_0" pos="119.05" period="3600.00" file="e1_71.xml">
+        <param key="bus_stop" value="bs_44"/>
+    </e1Detector>
+    <e1Detector id="e1_72" lane="625866891#0_0" pos="205.88" period="3600.00" file="e1_72.xml">
+        <param key="bus_stop" value="bs_21"/>
+    </e1Detector>
+    <e1Detector id="e1_73" lane="625866891#0_1" pos="205.88" period="3600.00" file="e1_73.xml">
+        <param key="bus_stop" value="bs_21"/>
+    </e1Detector>
+    <e1Detector id="e1_74" lane="625866891#0_2" pos="205.88" period="3600.00" file="e1_74.xml">
+        <param key="bus_stop" value="bs_21"/>
+    </e1Detector>
+    <e1Detector id="e1_75" lane="293149228#0_1" pos="13.84" period="3600.00" file="e1_75.xml">
+        <param key="bus_stop" value="bs_20"/>
+    </e1Detector>
+    <e1Detector id="e1_76" lane="293149228#0_0" pos="13.84" period="3600.00" file="e1_76.xml">
+        <param key="bus_stop" value="bs_20"/>
+    </e1Detector>
+    <e1Detector id="e1_77" lane="293149228#1_0" pos="87.21" period="3600.00" file="e1_77.xml">
+        <param key="bus_stop" value="bs_22"/>
+    </e1Detector>
+    <e1Detector id="e1_78" lane="293149228#1_1" pos="87.21" period="3600.00" file="e1_78.xml">
+        <param key="bus_stop" value="bs_22"/>
+    </e1Detector>
+    <e1Detector id="e1_79" lane="402298704#0_1" pos="10.39" period="3600.00" file="e1_79.xml">
+        <param key="bus_stop" value="bs_23"/>
+    </e1Detector>
+    <e1Detector id="e1_8" lane="-11955884#3.119_0" pos="2.69" period="3600.00" file="e1_8.xml">
+        <param key="bus_stop" value="bs_47"/>
+    </e1Detector>
+    <e1Detector id="e1_80" lane="402298704#0_0" pos="10.39" period="3600.00" file="e1_80.xml">
+        <param key="bus_stop" value="bs_23"/>
+    </e1Detector>
+    <e1Detector id="e1_81" lane="402298704#0_2" pos="10.39" period="3600.00" file="e1_81.xml">
+        <param key="bus_stop" value="bs_23"/>
+    </e1Detector>
+    <e1Detector id="e1_82" lane="11853134#0_0" pos="17.97" period="3600.00" file="e1_82.xml">
+        <param key="bus_stop" value="bs_40"/>
+    </e1Detector>
+    <e1Detector id="e1_83" lane="11853134#0_1" pos="17.97" period="3600.00" file="e1_83.xml">
+        <param key="bus_stop" value="bs_40"/>
+    </e1Detector>
+    <e1Detector id="e1_84" lane="317788870#3_0" pos="99.14" period="3600.00" file="e1_84.xml">
+        <param key="bus_stop" value="bs_42"/>
+    </e1Detector>
+    <e1Detector id="e1_85" lane="1053139777_0" pos="15.12" period="3600.00" file="e1_85.xml">
+        <param key="bus_stop" value="bs_24"/>
+    </e1Detector>
+    <e1Detector id="e1_86" lane="1053139777_1" pos="15.12" period="3600.00" file="e1_86.xml">
+        <param key="bus_stop" value="bs_24"/>
+    </e1Detector>
+    <e1Detector id="e1_87" lane="1053139777_2" pos="15.12" period="3600.00" file="e1_87.xml">
+        <param key="bus_stop" value="bs_24"/>
+    </e1Detector>
+    <e1Detector id="e1_88" lane="320948876#7_0" pos="84.80" period="3600.00" file="e1_88.xml">
+        <param key="bus_stop" value="bs_43"/>
+    </e1Detector>
+    <e1Detector id="e1_89" lane="625486449#2_0" pos="94.91" period="3600.00" file="e1_89.xml">
+        <param key="bus_stop" value="bs_26"/>
+    </e1Detector>
+    <e1Detector id="e1_9" lane="-11955884#3.119_1" pos="2.69" period="3600.00" file="e1_9.xml">
+        <param key="bus_stop" value="bs_47"/>
+    </e1Detector>
+    <e1Detector id="e1_90" lane="625486449#2_1" pos="94.91" period="3600.00" file="e1_90.xml">
+        <param key="bus_stop" value="bs_26"/>
+    </e1Detector>
+    <e1Detector id="e1_91" lane="625486449#2_2" pos="94.91" period="3600.00" file="e1_91.xml">
+        <param key="bus_stop" value="bs_26"/>
+    </e1Detector>
+    <e1Detector id="e1_92" lane="294294299#2_0" pos="108.88" period="3600.00" file="e1_92.xml">
+        <param key="bus_stop" value="bs_27"/>
+    </e1Detector>
+    <e1Detector id="e1_93" lane="294294299#2_1" pos="108.88" period="3600.00" file="e1_93.xml">
+        <param key="bus_stop" value="bs_27"/>
+    </e1Detector>
+    <e1Detector id="e1_94" lane="294294299#2_2" pos="108.88" period="3600.00" file="e1_94.xml">
+        <param key="bus_stop" value="bs_27"/>
+    </e1Detector>
+    <e1Detector id="e1_95" lane="294294299#6_0" pos="53.51" period="3600.00" file="e1_95.xml">
+        <param key="bus_stop" value="bs_25"/>
+    </e1Detector>
+    <e1Detector id="e1_96" lane="294294299#6_1" pos="53.51" period="3600.00" file="e1_96.xml">
+        <param key="bus_stop" value="bs_25"/>
+    </e1Detector>
+    <e1Detector id="e1_97" lane="294294299#6_2" pos="53.51" period="3600.00" file="e1_97.xml">
+        <param key="bus_stop" value="bs_25"/>
+    </e1Detector>
+    <e1Detector id="e1_98" lane="294294299#7_0" pos="85.93" period="3600.00" file="e1_98.xml">
+        <param key="bus_stop" value="bs_28"/>
+    </e1Detector>
+    <e1Detector id="e1_99" lane="294294299#7_1" pos="85.93" period="3600.00" file="e1_99.xml">
+        <param key="bus_stop" value="bs_28"/>
+    </e1Detector>
+</additional>
