@@ -144,7 +144,7 @@ class IntersectionTrafficDetector:
 
         for detector_id in self.subscription_extension.keys():
             self._detector_logs[current_time].append({
-                detector_id: {
+                f"{self.intersection_id}_{detector_id}": {
                     "volume": data["volume"][detector_id],
                     "speed": data["speed"][detector_id]
                 }

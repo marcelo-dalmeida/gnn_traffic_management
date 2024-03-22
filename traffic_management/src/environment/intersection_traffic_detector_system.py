@@ -117,9 +117,15 @@ class IntersectionTrafficDetectorSystem:
 
         df_list = []
         for intersection_id, detector in self._traffic_detectors.items():
-            df = pd.concat({time: pd.DataFrame(record) for time, records in detector._detector_logs.items() for record in records}, axis=1).T
-            df = df.unstack()
 
+            l = []
+            for time, records in detector._detector_logs.items():
+                df = pd.concat({k: pd.DataFrame.from_dict(v, 'index').T for record in records for k, v in record.items()}, axis=1)
+                df['time'] = time
+                df.set_index('time', inplace=True)
+                l.append(df)
+
+            df = pd.concat(l, axis=0)
             df_list.append(df)
 
             detector._detector_logs = []
@@ -128,6 +134,7 @@ class IntersectionTrafficDetectorSystem:
 
         log_df.index = log_df.index.astype(int)
         log_df.index = pd.to_datetime(log_df.index, unit='s')
+        log_df = log_df.swaplevel(axis=1)
 
         path_to_log_file = os.path.join(config.ROOT_DIR, self.path_to_log, f"detector_logs.h5")
         log_df.to_hdf(path_to_log_file, key='data')
