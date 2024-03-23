@@ -98,14 +98,24 @@ class IntersectionTrafficDetectorSystem:
 
         detectors = {}
 
-        traffic_light_id_intersection_id_mapping = (
-            sumo_net_util.get_traffic_light_id_intersection_id_map(self._net_xml, config.SCENARIO.MULTI_INTERSECTION_CONFIG))
+        intersection_map = sumo_net_util.get_intersection_map(self._net_xml)
+        border_intersection_map = sumo_net_util.get_border_intersection_map(self._net_xml)
 
-        for _, intersection_ids in traffic_light_id_intersection_id_mapping.items():
+        intersection_id_traffic_light_id_map = (
+            sumo_net_util.get_intersection_id_to_traffic_light_id_map(self._net_xml, config.SCENARIO.MULTI_INTERSECTION_CONFIG))
+
+        for intersection_id, _ in intersection_map.items():
+            traffic_light = intersection_id_traffic_light_id_map.get(intersection_id, None)
+            intersection_ids = intersection_id_traffic_light_id_map.inverse[traffic_light] if traffic_light else [intersection_id]
             intersection_id = ','.join(intersection_ids)
 
-            detectors[intersection_id] = IntersectionTrafficDetector(
-                intersection_id, self.do_evaluate_metrics, self.do_include_analysis_data)
+            is_intersection = sumo_net_util.is_intersection(
+                self._net_xml, intersection_id, config.SCENARIO.MULTI_INTERSECTION_CONFIG)
+            is_border = intersection_id in border_intersection_map
+
+            if (is_intersection or is_border) and intersection_id not in detectors:
+                detectors[intersection_id] = IntersectionTrafficDetector(
+                    intersection_id, self.do_evaluate_metrics, self.do_include_analysis_data)
 
         return detectors
 
