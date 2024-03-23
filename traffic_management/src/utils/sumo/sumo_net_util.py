@@ -124,6 +124,51 @@ def is_intersection(net_xml, intersection_id):
 
 
 @lru_cache(maxsize=None)
+def get_adjacent_intersections(net_xml, intersection_id, multi_intersection_config=None):
+
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
+
+    edge_to_previous_intersection_mapping, edge_to_next_intersection_mapping = (
+        get_edge_adjacent_intersections_mapping(net_xml))
+
+    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_config)
+
+    incoming_edges = set()
+    outgoing_edges = set()
+    for connection in connections:
+        incoming_edges.add(connection.get('from'))
+        outgoing_edges.add(connection.get('to'))
+
+    adjacent_intersections = set()
+    previous_intersections = []
+    next_intersections = []
+
+    for edge_id in incoming_edges:
+        edge = get_edge(net_xml, edge_id)
+        block_edges = get_block_edges(net_xml, edge)
+        initial_edge = block_edges[0]
+        initial_edge_id = initial_edge.get('id')
+        previous_intersection = edge_to_previous_intersection_mapping[initial_edge_id]
+
+        previous_intersections.append(previous_intersection)
+
+    for edge_id in outgoing_edges:
+        edge = get_edge(net_xml, edge_id)
+        block_edges = get_block_edges(net_xml, edge)
+        final_edge = block_edges[-1]
+        final_edge_id = final_edge.get('id')
+        next_intersection = edge_to_next_intersection_mapping[final_edge_id]
+
+        next_intersections.append(next_intersection)
+
+    adjacent_intersections.update(previous_intersections)
+    adjacent_intersections.update(next_intersections)
+
+    return list(adjacent_intersections), previous_intersections, next_intersections
+
+
+@lru_cache(maxsize=None)
 def get_previous_block_edges(net_xml, edge):
 
     edges = []
@@ -379,7 +424,7 @@ def get_block_edges(net_xml, edge):
 
 
 @lru_cache(maxsize=None)
-def get_intersection_connections(net_xml, intersection_id, multi_intersection_tl_config=None):
+def get_intersection_connections(net_xml, intersection_id, multi_intersection_config=None):
 
     def get_intersections_incoming_edges(net_xml, intersection_id, _sorted=True):
 
@@ -401,14 +446,14 @@ def get_intersection_connections(net_xml, intersection_id, multi_intersection_tl
 
         return incoming_edges
 
-    if multi_intersection_tl_config is None:
-        multi_intersection_tl_config = collections_util.HashableDict()
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
 
     connections = []
-    if intersection_id in multi_intersection_tl_config:
+    if intersection_id in multi_intersection_config:
 
         connection_by_edge_id = filter_intersection_incoming_edges(
-            net_xml, intersection_id, multi_intersection_tl_config)
+            net_xml, intersection_id, multi_intersection_config)
 
         for values in connection_by_edge_id.values():
             connections += values[0]
@@ -429,6 +474,25 @@ def get_intersection_connections(net_xml, intersection_id, multi_intersection_tl
 @lru_cache(maxsize=None)
 def get_traffic_light_program_logics(traffic_light_xml, traffic_light_id):
     return traffic_light_xml.findall('.//tlLogic[@id="' + traffic_light_id + '"]')
+
+
+@lru_cache(maxsize=None)
+def get_edge_adjacent_intersections_mapping(net_xml):
+
+    edge_to_previous_intersection_mapping = {}
+    edge_to_next_intersection_mapping = {}
+
+    edge_map = get_edge_map(net_xml)
+    for edge_id, edge in edge_map.items():
+
+        current_edges = get_block_edges(net_xml, edge)
+
+        previous_intersection_id = current_edges[0].get('from')
+        edge_to_previous_intersection_mapping[edge_id] = previous_intersection_id
+        next_intersection_id = current_edges[-1].get('to')
+        edge_to_next_intersection_mapping[edge_id] = next_intersection_id
+
+    return edge_to_previous_intersection_mapping, edge_to_next_intersection_mapping
 
 
 def get_connection_map(net_xml, type_=REGULAR_MAP):
@@ -544,12 +608,12 @@ def get_edge_id_block_edge_id_map(net_xml):
     return edge_id_block_edge_id_map
 
 
-def get_intersection_internal_edges(net_xml, intersection_id, multi_intersection_tl_config=None):
+def get_intersection_internal_edges(net_xml, intersection_id, multi_intersection_config=None):
 
-    if multi_intersection_tl_config is None:
-        multi_intersection_tl_config = collections_util.HashableDict()
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
 
-    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_tl_config)
+    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_config)
 
     internal_edges = set()
     for inner_connections in connections:
@@ -563,17 +627,17 @@ def get_intersection_internal_edges(net_xml, intersection_id, multi_intersection
     return list(internal_edges)
 
 
-def get_multi_intersection_intermediary_edges(net_xml, intersection_id, multi_intersection_tl_config=None):
+def get_multi_intersection_intermediary_edges(net_xml, intersection_id, multi_intersection_config=None):
 
-    if multi_intersection_tl_config is None:
-        multi_intersection_tl_config = collections_util.HashableDict()
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
 
     edges = set([])
 
-    if intersection_id not in multi_intersection_tl_config:
+    if intersection_id not in multi_intersection_config:
         return list(edges)
 
-    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_tl_config)
+    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_config)
 
     for inner_connections in connections:
 
@@ -673,11 +737,11 @@ def get_intersection_ids(net_xml, sorted_=True):
     return intersection_ids
 
 
-def get_intersection_edges(net_xml, intersection_id, multi_intersection_tl_config=None, _sorted=True,
+def get_intersection_edges(net_xml, intersection_id, multi_intersection_config=None, _sorted=True,
                            edge_type='all'):
 
-    if multi_intersection_tl_config is None:
-        multi_intersection_tl_config = collections_util.HashableDict()
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
 
     if edge_type == 'incoming':
         direction = 'from'
@@ -691,7 +755,7 @@ def get_intersection_edges(net_xml, intersection_id, multi_intersection_tl_confi
 
     edges = set()
 
-    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_tl_config)
+    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_config)
     for inner_connections in connections:
 
         if isinstance(inner_connections, list):
@@ -712,13 +776,13 @@ def get_intersection_edges(net_xml, intersection_id, multi_intersection_tl_confi
     if edge_type == 'all':
         edges.extend(
             get_intersection_edges(
-                net_xml, intersection_id, _sorted, multi_intersection_tl_config, edge_type='outgoing')
+                net_xml, intersection_id, _sorted, multi_intersection_config, edge_type='outgoing')
         )
 
     return edges
 
 
-def filter_intersection_incoming_edges(net_xml, intersection_id, multi_intersection_tl_config=None):
+def filter_intersection_incoming_edges(net_xml, intersection_id, multi_intersection_config=None):
 
     def get_incoming_edge_sort_order_function(sorted_incoming_edge_ids):
         def incoming_edge_sort_order(x):
@@ -810,13 +874,13 @@ def filter_intersection_incoming_edges(net_xml, intersection_id, multi_intersect
 
         return connection_chains_by_edge_id
 
-    if multi_intersection_tl_config is None:
-        multi_intersection_tl_config = collections_util.HashableDict()
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
 
-    if intersection_id not in multi_intersection_tl_config:
+    if intersection_id not in multi_intersection_config:
 
         incoming_edges = get_intersection_edges(
-            net_xml, intersection_id, multi_intersection_tl_config, edge_type='incoming')
+            net_xml, intersection_id, multi_intersection_config, edge_type='incoming')
 
         incoming_edge_ids = [edge.get('id') for edge in incoming_edges]
 
@@ -827,7 +891,7 @@ def filter_intersection_incoming_edges(net_xml, intersection_id, multi_intersect
 
         return connection_chains_by_edge_id
 
-    intersection_configuration = multi_intersection_tl_config[intersection_id]
+    intersection_configuration = multi_intersection_config[intersection_id]
 
     intersection_ids = intersection_configuration['intersections'] + intersection_configuration['non_coordinated']
 
@@ -858,7 +922,7 @@ def filter_intersection_incoming_edges(net_xml, intersection_id, multi_intersect
     return connection_chains_by_edge_id
 
 
-def get_traffic_light_id_intersection_id_map(net_xml, multi_intersection_tl_config=None, sorted_=True):
+def get_traffic_light_id_intersection_id_map(net_xml, multi_intersection_config=None, sorted_=True):
     def get_intersection_id_to_traffic_light_id_map():
 
         mapping = bidict()
@@ -870,13 +934,13 @@ def get_traffic_light_id_intersection_id_map(net_xml, multi_intersection_tl_conf
                          intersection.get('type') == 'traffic_light_unregulated'}
 
         for intersection_id, intersection in intersections.items():
-            traffic_light_id = get_intersection_traffic_light_id(net_xml, intersection_id, multi_intersection_tl_config)
+            traffic_light_id = get_intersection_traffic_light_id(net_xml, intersection_id, multi_intersection_config)
             mapping[intersection_id] = traffic_light_id
 
         return mapping
 
-    if multi_intersection_tl_config is None:
-        multi_intersection_tl_config = collections_util.HashableDict()
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
 
     inter_tl_mapping = get_intersection_id_to_traffic_light_id_map()
     tl_inter_mapping = inter_tl_mapping.inverse
@@ -892,14 +956,14 @@ def get_traffic_light_id_intersection_id_map(net_xml, multi_intersection_tl_conf
     return tl_inter_mapping
 
 
-def get_intersection_traffic_light_id(net_xml, intersection_id, multi_intersection_tl_config=None):
+def get_intersection_traffic_light_id(net_xml, intersection_id, multi_intersection_config=None):
 
-    if multi_intersection_tl_config is None:
-        multi_intersection_tl_config = collections_util.HashableDict()
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
 
     tl_set = set()
 
-    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_tl_config)
+    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_config)
     for connection in connections:
         tl = connection.get('tl', None)
         if tl is not None:
@@ -926,12 +990,12 @@ def get_intersection_connection_requests(net_xml, intersection_id):
     return connection_requests
 
 
-def get_intersection_internal_connection_chains(net_xml, intersection_id, multi_intersection_tl_config=None):
+def get_intersection_internal_connection_chains(net_xml, intersection_id, multi_intersection_config=None):
 
-    if multi_intersection_tl_config is None:
-        multi_intersection_tl_config = collections_util.HashableDict()
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
 
-    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_tl_config)
+    connections = get_intersection_connections(net_xml, intersection_id, multi_intersection_config)
 
     internal_connection_chains = []
     for inner_connections in connections:
@@ -952,24 +1016,6 @@ def get_intersection_internal_connection_chains(net_xml, intersection_id, multi_
             internal_connection_chains.append(internal_connections)
 
     return internal_connection_chains
-
-
-def get_edge_adjacent_intersections_mapping(net_xml):
-
-    edge_to_previous_intersection_mapping = {}
-    edge_to_next_intersection_mapping = {}
-
-    edge_map = get_edge_map(net_xml)
-    for edge_id, edge in edge_map.items():
-
-        current_edges = get_block_edges(net_xml, edge)
-
-        previous_intersection_id = current_edges[0].get('from')
-        edge_to_previous_intersection_mapping[edge_id] = previous_intersection_id
-        next_intersection_id = current_edges[-1].get('to')
-        edge_to_next_intersection_mapping[edge_id] = next_intersection_id
-
-    return edge_to_previous_intersection_mapping, edge_to_next_intersection_mapping
 
 
 def get_network_border_edges(net_xml):
@@ -1051,3 +1097,57 @@ def sort_edges_by_angle(edges, incoming=True, clockwise=True):
 
     return angle_sorted_edges
 
+
+def generate_adjacency_graph(net_xml, detector_ids=None, multi_intersection_config=None):
+
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
+
+    if detector_ids is None:
+        # Consider the intersections as nodes
+        raise NotImplementedError
+
+    edge_to_previous_intersection_mapping, edge_to_next_intersection_mapping = (
+        get_edge_adjacent_intersections_mapping(net_xml))
+
+    from_lane__via_connection_map = get_from_lane_all_connections_map(net_xml)
+
+    adjacency_graph = collections.defaultdict(list)
+
+    for detector_id in detector_ids:
+        intersection_id, edge_id = detector_id.rsplit('_', 1)
+        edge = get_edge(net_xml, edge_id)
+
+        incoming_edges = get_intersection_edges(
+            net_xml, intersection_id, multi_intersection_config, edge_type='incoming')
+
+        if edge in incoming_edges:
+            to_edge_ids = set()
+            for lane in edge:
+                lane_id = lane.get('id')
+                connections = from_lane__via_connection_map[lane_id]
+
+                to_edge_ids.update([connection.get('to') for connection in connections])
+
+            for to_edge_id in to_edge_ids:
+                other_detector_id = f"{intersection_id}_{to_edge_id}"
+                if other_detector_id in detector_ids:
+                    adjacency_graph[detector_id].append(other_detector_id)
+
+            continue
+
+        outgoing_edges = get_intersection_edges(
+            net_xml, intersection_id, multi_intersection_config, edge_type='outgoing')
+
+        if edge in outgoing_edges:
+            block_edges = get_block_edges(net_xml, edge)
+            to_edge = block_edges[-1]
+            to_edge_id = to_edge.get('id')
+
+            other_intersection_id = edge_to_next_intersection_mapping[to_edge_id]
+
+            other_detector_id = f"{other_intersection_id}_{to_edge_id}"
+            if other_detector_id in detector_ids:
+                adjacency_graph[detector_id].append(other_detector_id)
+
+    return adjacency_graph

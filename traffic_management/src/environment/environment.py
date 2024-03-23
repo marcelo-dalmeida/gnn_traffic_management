@@ -1,6 +1,4 @@
 import os
-import json
-import warnings
 
 import config
 from environment.intersection_traffic_detector_system import IntersectionTrafficDetectorSystem
@@ -10,7 +8,7 @@ from environment.simulation_data_subscriber import SimulationDataSubscriber, PER
 import traci
 import traci.constants as tc
 
-from utils import xml_util, collections_util
+from utils import xml_util
 from utils.sumo import sumo_traci_util, sumo_util, sumo_net_util
 
 
@@ -45,16 +43,8 @@ class Environment:
                 config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.PASSENGER_TRIPS_FILE)
             self._passenger_trips_xml = xml_util.parse_xml(self._passenger_trips_file)
 
-        self.intersection_detector_system = IntersectionTrafficDetectorSystem(
+        self.detector_system = IntersectionTrafficDetectorSystem(
             evaluate_metrics=evaluate_metrics, include_analysis_data=include_analysis_data)
-
-        try:
-            with open(os.path.join(
-                    config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.MULTI_INTERSECTION_TL_FILE), 'r') as file:
-                self._multi_intersection_config = collections_util.HashableDict(json.load(file))
-        except Exception as e:
-            warnings.warn("No multi intersection tl file present")
-            self._multi_intersection_config = collections_util.HashableDict()
 
         # network attributes
         self._edges = (
@@ -64,9 +54,6 @@ class Environment:
         self._lanes = (
                 list(sumo_net_util.get_lane_map(self._net_xml).keys()) +
                 list(sumo_net_util.get_internal_lane_map(self._net_xml).keys()))
-
-        self._edge_to_previous_intersection_mapping, self._edge_to_next_intersection_mapping = (
-            sumo_net_util.get_edge_adjacent_intersections_mapping(self._net_xml))
 
         self._simulation_warmup = False
 
@@ -87,7 +74,7 @@ class Environment:
 
         self.__setup(evaluate_metrics, include_analysis_data, *args, **kwargs)
 
-        self.intersection_detector_system.setup(
+        self.detector_system.setup(
             self._data_subscription, evaluate_metrics=evaluate_metrics, include_analysis_data=include_analysis_data,
             path_to_log=path_to_log)
 
@@ -115,7 +102,7 @@ class Environment:
         # basic info
         self.step_ = 0
 
-        self.intersection_detector_system.reset(execution_name)
+        self.detector_system.reset(execution_name)
 
     def start(self, parameters=None, with_gui=False):
 
@@ -130,7 +117,7 @@ class Environment:
 
         self._start_up()
 
-        self.intersection_detector_system.start()
+        self.detector_system.start()
 
     def _start_up(self):
 
@@ -153,7 +140,7 @@ class Environment:
         self._data_subscription.clear_subscriptions()
         self._update_data_subscriptions()
 
-        self.intersection_detector_system.step_environment()
+        self.detector_system.step_environment()
 
         return self.step_, tuple()
 
@@ -167,4 +154,4 @@ class Environment:
         self._data_subscription.subscribe(PERSON, recently_departed_persons_ids)
 
     def save_log(self):
-        self.intersection_detector_system.save_log()
+        self.detector_system.save_log()

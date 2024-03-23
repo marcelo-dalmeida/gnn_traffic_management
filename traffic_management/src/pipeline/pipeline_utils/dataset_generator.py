@@ -5,7 +5,8 @@ import pandas as pd
 from tqdm import tqdm
 
 import config
-from utils import datetime_util, tqdm_util
+from utils import datetime_util, tqdm_util, xml_util
+from utils.sumo import sumo_net_util
 
 
 def run_simulation(env, simulation_warmup=False):
@@ -84,3 +85,30 @@ def generate_dataset():
 
     path_to_dataset_file = os.path.join(config.ROOT_DIR, path_to_log, filename)
     detector_logs.to_hdf(path_to_dataset_file, key='data')
+
+
+def generate_adjacency_graph(env):
+
+    file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'Adj.txt')
+    if Path(file).is_file():
+        return
+
+    net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.NET_FILE)
+    net_xml = xml_util.parse_xml(net_file)
+
+    detector_ids = env.detector_system.get_ids()
+
+    adjacency_graph = sumo_net_util.generate_adjacency_graph(
+        net_xml, detector_ids, config.SCENARIO.MULTI_INTERSECTION_CONFIG)
+
+    adjacency_graph = {k: [{v: 1.0} for v in vs] for k, vs in adjacency_graph.items()}
+
+    space_separated_values = [
+        f"{k} {sk} {v}"
+        for k, sub_list in adjacency_graph.items()
+        for sub_dict in sub_list
+        for sk, v in sub_dict.items()
+    ]
+
+    with open(file, 'w') as handle:
+        handle.write('\n'.join(str(line) for line in space_separated_values))

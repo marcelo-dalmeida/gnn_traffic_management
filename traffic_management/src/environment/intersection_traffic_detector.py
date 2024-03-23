@@ -15,26 +15,25 @@ from utils.sumo import sumo_traci_util, sumo_util, sumo_net_util
 
 class IntersectionTrafficDetector:
 
-    def __init__(self, intersection_id, multi_intersection,
+    def __init__(self, intersection_id,
                  evaluate_metrics=False, include_analysis_data=False, execution_name=None):
 
         net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.NET_FILE)
         self._net_xml = xml_util.parse_xml(net_file)
 
         self.intersection_id = intersection_id
-        self._multi_intersection_config = multi_intersection
 
         self.entering_edges = sumo_net_util.get_intersection_edges(
             self._net_xml,
             self.intersection_id,
-            self._multi_intersection_config,
+            config.SCENARIO.MULTI_INTERSECTION_CONFIG,
             edge_type='incoming'
         )
 
         self.exiting_edges = sumo_net_util.get_intersection_edges(
             self._net_xml,
             self.intersection_id,
-            self._multi_intersection_config,
+            config.SCENARIO.MULTI_INTERSECTION_CONFIG,
             edge_type='outgoing'
         )
 
@@ -56,6 +55,11 @@ class IntersectionTrafficDetector:
         ]).tolist()
 
         self.detector_additional_info = None
+
+        self.detector_ids = [
+            f"{self.intersection_id}_{detector_id}"
+            for detector_id in self.subscription_extension.keys()
+        ]
 
         self.reset(execution_name)
 

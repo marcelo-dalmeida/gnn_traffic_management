@@ -33,14 +33,6 @@ class IntersectionTrafficDetectorSystem:
 
         self.__setup(evaluate_metrics, include_analysis_data)
 
-        try:
-            with open(os.path.join(
-                    config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.MULTI_INTERSECTION_TL_FILE), 'r') as file:
-                self._multi_intersection_config = collections_util.HashableDict(json.load(file))
-        except Exception as e:
-            warnings.warn("No multi intersection tl file present")
-            self._multi_intersection_config = collections_util.HashableDict()
-
         self._traffic_detectors = self._setup_traffic_detectors()
 
         self._simulation_warmup = False
@@ -95,21 +87,25 @@ class IntersectionTrafficDetectorSystem:
             detector.step()
 
     def get_ids(self):
-        return list(self._traffic_detectors.keys())
+
+        detector_ids = []
+        for intersection_id, detector in self._traffic_detectors.items():
+            detector_ids.extend(detector.detector_ids)
+
+        return detector_ids
 
     def _setup_traffic_detectors(self):
 
         detectors = {}
 
         traffic_light_id_intersection_id_mapping = (
-            sumo_net_util.get_traffic_light_id_intersection_id_map(self._net_xml, self._multi_intersection_config))
+            sumo_net_util.get_traffic_light_id_intersection_id_map(self._net_xml, config.SCENARIO.MULTI_INTERSECTION_CONFIG))
 
         for _, intersection_ids in traffic_light_id_intersection_id_mapping.items():
             intersection_id = ','.join(intersection_ids)
 
             detectors[intersection_id] = IntersectionTrafficDetector(
-                intersection_id, self._multi_intersection_config,
-                self.do_evaluate_metrics, self.do_include_analysis_data)
+                intersection_id, self.do_evaluate_metrics, self.do_include_analysis_data)
 
         return detectors
 
