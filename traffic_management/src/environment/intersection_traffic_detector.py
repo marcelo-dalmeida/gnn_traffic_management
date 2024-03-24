@@ -57,7 +57,7 @@ class IntersectionTrafficDetector:
         self.detector_additional_info = None
 
         self.detector_ids = [
-            f"{self.intersection_id}_{detector_id}"
+            f"{self.intersection_id}__{detector_id}"
             for detector_id in self.subscription_extension.keys()
         ]
 

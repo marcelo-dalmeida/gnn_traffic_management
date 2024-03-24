@@ -89,7 +89,7 @@ def generate_dataset():
 
 def generate_adjacency_graph(env):
 
-    file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'Adj.txt')
+    file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'original_id_adj.txt')
     if Path(file).is_file():
         return
 

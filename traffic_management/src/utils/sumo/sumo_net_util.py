@@ -802,10 +802,11 @@ def get_intersection_edges(net_xml, intersection_id, multi_intersection_config=N
 
     border_intersection_map = get_border_intersection_map(net_xml)
     if intersection_id in border_intersection_map:
+        # from and to is inverted because we are not dealing with connections here
         if direction != 'from':
-            edges.update(net_xml.findall(f'.//edge[@to="{intersection_id}"]'))
-        if direction != 'to':
             edges.update(net_xml.findall(f'.//edge[@from="{intersection_id}"]'))
+        if direction != 'to':
+            edges.update(net_xml.findall(f'.//edge[@to="{intersection_id}"]'))
 
     if _sorted:
         incoming = True if direction == 'from' else False
@@ -1095,9 +1096,22 @@ def get_network_border_edges(net_xml):
     return junction_to_network_entering_edges_mapping, junction_to_network_exiting_edges_mapping
 
 
-def sort_intersections(net_xml, intersection_ids):
+def sort_intersections(net_xml, intersection_ids, multi_intersection_config=None):
 
-    intersections = [get_intersection(net_xml, intersection_id) for intersection_id in intersection_ids]
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
+
+    intersection_map = {}
+    intersections = []
+    for intersection_id in intersection_ids:
+
+        if intersection_id not in multi_intersection_config:
+            temp_id = intersection_id.split(',')[0]
+            intersection_map[temp_id] = intersection_id
+            intersection_id = temp_id
+
+        intersection = get_intersection(net_xml, intersection_id)
+        intersections.append(intersection)
 
     intersection_points = []
     for intersection in intersections:
@@ -1109,7 +1123,27 @@ def sort_intersections(net_xml, intersection_ids):
 
     intersection_ids = list(list(zip(*sorted_id_and_location))[0])
 
+    intersection_ids = [
+        intersection_map.get(intersection_id, intersection_id)
+        for intersection_id in intersection_ids
+    ]
+
     return intersection_ids
+
+
+def sort_detector_ids(net_xml, detectors_ids):
+
+    detector_id_tuples = [detectors_id.rsplit('__', 1) for detectors_id in detectors_ids]
+
+    intersection_ids, edge_ids = list(zip(*detector_id_tuples))
+
+    sorted_intersection_ids = sort_intersections(net_xml, intersection_ids)
+
+    detector_id_tuples.sort(key=lambda x: {k: v for v, k in enumerate(sorted_intersection_ids)}[x[0]])
+
+    detectors_ids = ['__'.join(detector_id_tuple) for detector_id_tuple in detector_id_tuples]
+
+    return detectors_ids
 
 
 def sort_edges_by_angle(edges, incoming=True, clockwise=True):
@@ -1160,7 +1194,7 @@ def generate_adjacency_graph(net_xml, detector_ids=None, multi_intersection_conf
     adjacency_graph = collections.defaultdict(list)
 
     for detector_id in detector_ids:
-        intersection_id, edge_id = detector_id.rsplit('_', 1)
+        intersection_id, edge_id = detector_id.rsplit('__', 1)
         edge = get_edge(net_xml, edge_id)
 
         incoming_edges = get_intersection_edges(
@@ -1175,7 +1209,7 @@ def generate_adjacency_graph(net_xml, detector_ids=None, multi_intersection_conf
                 to_edge_ids.update([connection.get('to') for connection in connections])
 
             for to_edge_id in to_edge_ids:
-                other_detector_id = f"{intersection_id}_{to_edge_id}"
+                other_detector_id = f"{intersection_id}__{to_edge_id}"
                 if other_detector_id in detector_ids:
                     adjacency_graph[detector_id].append(other_detector_id)
 
@@ -1191,7 +1225,7 @@ def generate_adjacency_graph(net_xml, detector_ids=None, multi_intersection_conf
 
             other_intersection_id = edge_to_next_intersection_mapping[to_edge_id]
 
-            other_detector_id = f"{other_intersection_id}_{to_edge_id}"
+            other_detector_id = f"{other_intersection_id}__{to_edge_id}"
             if other_detector_id in detector_ids:
                 adjacency_graph[detector_id].append(other_detector_id)
 
