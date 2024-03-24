@@ -44,5 +44,6 @@ class Pipeline:
         dataset_generator.run_simulation(self.env, simulation_warmup=False)
         dataset_generator.generate_dataset()
         dataset_generator.generate_adjacency_graph(self.env)
+        dataset_generator.generate_static_embedding()
 
 

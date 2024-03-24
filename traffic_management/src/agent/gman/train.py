@@ -1,5 +1,6 @@
 import argparse
 import math
+import os
 import time
 import datetime
 
@@ -7,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 import agent.gman.utils as utils
-import agent.gman.model as gman
+import agent.gman.model as model
 
 
 def train():
@@ -52,13 +53,19 @@ def train():
 
     start = time.time()
 
-    log = open(args.log_file, 'w')
+    import config
+
+    dataset_file = os.path.join(config.PATH_TO_RECORDS, 'data', 'dataset.h5')
+    attribute = 'speed'
+
+    args.log_file = os.path.join(config.PATH_TO_RECORDS, config.EXPERIMENT.SCENARIO_NAME)
+    log = open(os.path.join(config.ROOT_DIR, args.log_file), 'w')
     utils.log_string(log, str(args)[10: -1])
 
     # load data
     utils.log_string(log, 'loading data...')
     (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY, SE,
-     mean, std) = utils.loadData(args)
+     mean, std) = utils.loadData(args, dataset_file, attribute)
     utils.log_string(log, 'trainX: %s\ttrainY: %s' % (trainX.shape, trainY.shape))
     utils.log_string(log, 'valX:   %s\t\tvalY:   %s' % (valX.shape, valY.shape))
     utils.log_string(log, 'testX:  %s\t\ttestY:  %s' % (testX.shape, testY.shape))

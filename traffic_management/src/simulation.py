@@ -23,6 +23,7 @@ def run():
 
     pipeline = Pipeline()
     pipeline.generate_dataset()
+    pipeline.run()
 
 
 if __name__ == "__main__":

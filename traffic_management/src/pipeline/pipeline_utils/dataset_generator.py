@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 import config
+from agent.gman.node2vec.generateSE import generate_static_embedding
 from utils import datetime_util, tqdm_util, xml_util
 from utils.sumo import sumo_net_util
 
@@ -112,3 +113,7 @@ def generate_adjacency_graph(env):
 
     with open(file, 'w') as handle:
         handle.write('\n'.join(str(line) for line in space_separated_values))
+
+
+def generate_gman_static_embedding():
+    generate_static_embedding()

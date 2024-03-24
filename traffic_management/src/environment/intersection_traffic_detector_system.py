@@ -124,7 +124,6 @@ class IntersectionTrafficDetectorSystem:
 
         df_list = []
         for intersection_id, detector in self._traffic_detectors.items():
-
             for time, records in detector._detector_logs.items():
                 for record in records:
                     d = [{
