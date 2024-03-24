@@ -47,12 +47,7 @@ def train():
         X,
         TE,
         SE,
-        config.AGENT.HISTORY_STEPS,
-        config.AGENT.PREDICTION_STEPS,
         T,
-        config.AGENT.NUMBER_OF_STATT_BLOCKS,
-        config.AGENT.NUMBER_OF_ATTENTION_HEADS,
-        config.AGENT.HEAD_ATTENTION_OUTPUT_DIM,
         bn=True,
         bn_decay=bn_decay,
         is_training=is_training
@@ -74,9 +69,9 @@ def train():
     utils.log_string(log, 'trainable parameters: {:,}'.format(parameters))
     utils.log_string(log, 'model compiled!')
     saver = tf.compat.v1.train.Saver()
-    config = tf.compat.v1.ConfigProto()
-    config.gpu_options.allow_growth = True
-    sess = tf.compat.v1.Session(config=config)
+    tf_config = tf.compat.v1.ConfigProto()
+    tf_config.gpu_options.allow_growth = True
+    sess = tf.compat.v1.Session(config=tf_config)
     sess.run(tf.compat.v1.global_variables_initializer())
     utils.log_string(log, '**** training model ****')
     num_val = valX.shape[0]

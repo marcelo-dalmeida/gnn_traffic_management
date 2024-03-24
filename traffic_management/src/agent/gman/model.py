@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 import agent.gman.tf_utils as tf_utils
+import config
 
 
 def placeholder(P, Q, N):
@@ -234,7 +235,7 @@ def transformAttention(X, STE_P, STE_Q, K, d, bn, bn_decay, is_training):
     return X
 
 
-def GMAN(X, TE, SE, P, Q, T, L, K, d, bn, bn_decay, is_training):
+def GMAN(X, TE, SE, T, bn, bn_decay, is_training):
     '''
     GMAN
     X：       [batch_size, P, N]
@@ -248,6 +249,13 @@ def GMAN(X, TE, SE, P, Q, T, L, K, d, bn, bn_decay, is_training):
     d：       dimension of each attention head outputs
     return：  [batch_size, Q, N]
     '''
+
+    P = config.AGENT.HISTORY_STEPS
+    Q = config.AGENT.PREDICTION_STEPS
+    L = config.AGENT.NUMBER_OF_STATT_BLOCKS
+    K = config.AGENT.NUMBER_OF_ATTENTION_HEADS
+    d = config.AGENT.HEAD_ATTENTION_OUTPUT_DIM
+
     D = K * d
     # input
     X = tf.expand_dims(X, axis=-1)
