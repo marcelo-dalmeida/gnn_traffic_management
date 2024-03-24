@@ -1,5 +1,5 @@
+import os
 import math
-import argparse
 import time
 
 import numpy as np
@@ -9,38 +9,22 @@ import utils
 
 
 def test():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--P', type=int, default=12,
-                        help='history steps')
-    parser.add_argument('--Q', type=int, default=12,
-                        help='prediction steps')
-    parser.add_argument('--train_ratio', type=float, default=0.7,
-                        help='training set [default : 0.7]')
-    parser.add_argument('--val_ratio', type=float, default=0.1,
-                        help='validation set [default : 0.1]')
-    parser.add_argument('--test_ratio', type=float, default=0.2,
-                        help='testing set [default : 0.2]')
-    parser.add_argument('--batch_size', type=int, default=32,
-                        help='batch size')
-    parser.add_argument('--traffic_file', default='data/METR.h5',
-                        help='traffic file')
-    parser.add_argument('--SE_file', default='data/SE(METR).txt',
-                        help='spatial emebdding file')
-    parser.add_argument('--model_file', default='data/GMAN(METR)',
-                        help='pre-trained model')
-    parser.add_argument('--log_file', default='data/log(METR)',
-                        help='log file')
-    args = parser.parse_args()
+
+    import config
+
+    dataset_file = os.path.join(config.PATH_TO_RECORDS, 'data', 'dataset.h5')
 
     start = time.time()
 
-    log = open(args.log_file, 'w')
-    utils.log_string(log, str(args)[10: -1])
+    log_file = os.path.join(config.PATH_TO_RECORDS, config.EXPERIMENT.SCENARIO_NAME)
+    log = open(os.path.join(config.ROOT_DIR, log_file), 'w')
+
+    model_file = os.path.join(config.PATH_TO_RECORDS, f"{config.EXPERIMENT.SCENARIO_NAME}_gman_model")
 
     # load data
     utils.log_string(log, 'loading data...')
     (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY,
-     SE, mean, std) = utils.loadData(args)
+     SE, mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
     num_train, num_val, num_test = trainX.shape[0], valX.shape[0], testX.shape[0]
     utils.log_string(log, 'trainX: %s\ttrainY: %s' % (trainX.shape, trainY.shape))
     utils.log_string(log, 'valX:   %s\t\tvalY:   %s' % (valX.shape, valY.shape))
@@ -49,14 +33,14 @@ def test():
 
     # test model
     utils.log_string(log, '**** testing model ****')
-    utils.log_string(log, 'loading model from %s' % args.model_file)
+    utils.log_string(log, 'loading model from %s' % os.path.join(config.ROOT_DIR, model_file))
     graph = tf.Graph()
     with graph.as_default():
-        saver = tf.compat.v1.train.import_meta_graph(args.model_file + '.meta')
+        saver = tf.compat.v1.train.import_meta_graph(os.path.join(config.ROOT_DIR, model_file) + '.meta')
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(graph=graph, config=config) as sess:
-        saver.restore(sess, args.model_file)
+        saver.restore(sess, os.path.join(config.ROOT_DIR, model_file))
         parameters = 0
         for variable in tf.compat.v1.trainable_variables():
             parameters += np.product([x.value for x in variable.get_shape()])
@@ -65,10 +49,10 @@ def test():
         utils.log_string(log, 'model restored!')
         utils.log_string(log, 'evaluating...')
         trainPred = []
-        num_batch = math.ceil(num_train / args.batch_size)
+        num_batch = math.ceil(num_train / config.AGENT.BATCH_SIZE)
         for batch_idx in range(num_batch):
-            start_idx = batch_idx * args.batch_size
-            end_idx = min(num_train, (batch_idx + 1) * args.batch_size)
+            start_idx = batch_idx * config.AGENT.BATCH_SIZE
+            end_idx = min(num_train, (batch_idx + 1) * config.AGENT.BATCH_SIZE)
             feed_dict = {
                 'X:0': trainX[start_idx: end_idx],
                 'TE:0': trainTE[start_idx: end_idx],
@@ -77,10 +61,10 @@ def test():
             trainPred.append(pred_batch)
         trainPred = np.concatenate(trainPred, axis=0)
         valPred = []
-        num_batch = math.ceil(num_val / args.batch_size)
+        num_batch = math.ceil(num_val / config.AGENT.BATCH_SIZE)
         for batch_idx in range(num_batch):
-            start_idx = batch_idx * args.batch_size
-            end_idx = min(num_val, (batch_idx + 1) * args.batch_size)
+            start_idx = batch_idx * config.AGENT.BATCH_SIZE
+            end_idx = min(num_val, (batch_idx + 1) * config.AGENT.BATCH_SIZE)
             feed_dict = {
                 'X:0': valX[start_idx: end_idx],
                 'TE:0': valTE[start_idx: end_idx],
@@ -89,11 +73,11 @@ def test():
             valPred.append(pred_batch)
         valPred = np.concatenate(valPred, axis=0)
         testPred = []
-        num_batch = math.ceil(num_test / args.batch_size)
+        num_batch = math.ceil(num_test / config.AGENT.BATCH_SIZE)
         start_test = time.time()
         for batch_idx in range(num_batch):
-            start_idx = batch_idx * args.batch_size
-            end_idx = min(num_test, (batch_idx + 1) * args.batch_size)
+            start_idx = batch_idx * config.AGENT.BATCH_SIZE
+            end_idx = min(num_test, (batch_idx + 1) * config.AGENT.BATCH_SIZE)
             feed_dict = {
                 'X:0': testX[start_idx: end_idx],
                 'TE:0': testTE[start_idx: end_idx],
@@ -115,7 +99,7 @@ def test():
                      (test_mae, test_rmse, test_mape * 100))
     utils.log_string(log, 'performance in each prediction step')
     MAE, RMSE, MAPE = [], [], []
-    for q in range(args.Q):
+    for q in range(config.AGENT.PREDICTION_STEPS):
         mae, rmse, mape = utils.metric(testPred[:, q], testY[:, q])
         MAE.append(mae)
         RMSE.append(rmse)
