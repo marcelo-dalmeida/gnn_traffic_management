@@ -123,6 +123,8 @@ def process_adjacency_graph_file():
 
 
 def generate_static_embedding():
+    process_adjacency_graph_file()
+
     file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'Adj.txt')
     se_file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'SE.txt')
 

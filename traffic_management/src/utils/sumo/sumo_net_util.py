@@ -510,7 +510,27 @@ def get_traffic_light_program_logics(traffic_light_xml, traffic_light_id):
 
 
 @lru_cache(maxsize=None)
-def get_edge_adjacent_intersections_mapping(net_xml):
+def get_multi_intersection_map(multi_intersection_config=None):
+
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
+
+    multi_intersection_map = {
+        intersection: k
+        for k, v in multi_intersection_config.items()
+        for intersection in v['intersections']
+    }
+
+    return multi_intersection_map
+
+
+@lru_cache(maxsize=None)
+def get_edge_adjacent_intersections_mapping(net_xml, multi_intersection_config=None):
+
+    if multi_intersection_config is None:
+        multi_intersection_config = collections_util.HashableDict()
+
+    multi_intersection_map = get_multi_intersection_map(multi_intersection_config)
 
     edge_to_previous_intersection_mapping = {}
     edge_to_next_intersection_mapping = {}
@@ -521,8 +541,13 @@ def get_edge_adjacent_intersections_mapping(net_xml):
         current_edges = get_block_edges(net_xml, edge)
 
         previous_intersection_id = current_edges[0].get('from')
+        previous_intersection_id = multi_intersection_map.get(previous_intersection_id, previous_intersection_id)
+
         edge_to_previous_intersection_mapping[edge_id] = previous_intersection_id
+
         next_intersection_id = current_edges[-1].get('to')
+        next_intersection_id = multi_intersection_map.get(next_intersection_id, next_intersection_id)
+
         edge_to_next_intersection_mapping[edge_id] = next_intersection_id
 
     return edge_to_previous_intersection_mapping, edge_to_next_intersection_mapping
@@ -1101,15 +1126,12 @@ def sort_intersections(net_xml, intersection_ids, multi_intersection_config=None
     if multi_intersection_config is None:
         multi_intersection_config = collections_util.HashableDict()
 
-    intersection_map = {}
+    multi_intersection_map = get_multi_intersection_map(multi_intersection_config)
+
     intersections = []
     for intersection_id in intersection_ids:
 
-        if intersection_id not in multi_intersection_config:
-            temp_id = intersection_id.split(',')[0]
-            intersection_map[temp_id] = intersection_id
-            intersection_id = temp_id
-
+        intersection_id = intersection_id.split(',')[0]
         intersection = get_intersection(net_xml, intersection_id)
         intersections.append(intersection)
 
@@ -1124,7 +1146,7 @@ def sort_intersections(net_xml, intersection_ids, multi_intersection_config=None
     intersection_ids = list(list(zip(*sorted_id_and_location))[0])
 
     intersection_ids = [
-        intersection_map.get(intersection_id, intersection_id)
+        multi_intersection_map.get(intersection_id, intersection_id)
         for intersection_id in intersection_ids
     ]
 
@@ -1187,7 +1209,7 @@ def generate_adjacency_graph(net_xml, detector_ids=None, multi_intersection_conf
         raise NotImplementedError
 
     edge_to_previous_intersection_mapping, edge_to_next_intersection_mapping = (
-        get_edge_adjacent_intersections_mapping(net_xml))
+        get_edge_adjacent_intersections_mapping(net_xml, multi_intersection_config))
 
     from_lane__via_connection_map = get_from_lane_all_connections_map(net_xml)
 
@@ -1230,3 +1252,13 @@ def generate_adjacency_graph(net_xml, detector_ids=None, multi_intersection_conf
                 adjacency_graph[detector_id].append(other_detector_id)
 
     return adjacency_graph
+
+
+def get_all_detector_ids(adjacency_graph):
+    detector_ids = set()
+    for k, vs in adjacency_graph.items():
+        for v in vs:
+            source, target = k, v
+            detector_ids.update({source, target})
+
+    return detector_ids
