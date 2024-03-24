@@ -1,0 +1,20 @@
+version: '3'
+services:
+  traffic-management:
+    image: traffic_management:latest
+    build: .
+    command: src/simulation.py
+    ports:
+      - 5678:5678
+    volumes:
+      - './scenario:/app/scenario'
+      - './traffic-management/output/data:/app/traffic-management/output/data'
+      - './traffic-management/output/model:/app/traffic-management/output/model'
+      - './traffic-management/output/records:/app/traffic-management/output/records'
+      - './traffic-management/output/summary:/app/traffic-management/output/summary'
+      - './traffic-management/output/metric:/app/traffic-management/output/metric'
+      - './traffic-management/output/config:/app/traffic-management/output/config'
+    env_file:
+      - .env
+    # CURRENT_UID=$(id -u):$(id -g) before docker-compose command
+    # user: ${CURRENT_UID}

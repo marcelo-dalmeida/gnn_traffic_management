@@ -1,0 +1,9 @@
+# jetbrains configuration
+.idea
+
+/output/model
+/output/records
+/output/summary
+/output/metric
+/output/config
+/config
