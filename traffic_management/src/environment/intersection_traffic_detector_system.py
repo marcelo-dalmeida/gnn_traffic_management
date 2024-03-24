@@ -1,3 +1,4 @@
+import collections
 import os
 import json
 import pickle
@@ -124,23 +125,23 @@ class IntersectionTrafficDetectorSystem:
         df_list = []
         for intersection_id, detector in self._traffic_detectors.items():
 
-            l = []
             for time, records in detector._detector_logs.items():
-                df = pd.concat({k: pd.DataFrame.from_dict(v, 'index').T for record in records for k, v in record.items()}, axis=1)
-                df['time'] = time
-                df.set_index('time', inplace=True)
-                l.append(df)
+                for record in records:
+                    d = [{
+                        'time': time,
+                        'detector_id': k,
+                        **v
+                    } for k, v in record.items()]
+                    df_list.extend(d)
 
-            df = pd.concat(l, axis=0)
-            df_list.append(df)
-
-            detector._detector_logs = []
-
-        log_df = pd.concat(df_list, axis=1)
+        log_df = pd.DataFrame(df_list)
+        log_df = log_df.pivot_table(index='time', columns='detector_id', values=['volume', 'speed'])
 
         log_df.index = log_df.index.astype(int)
         log_df.index = pd.to_datetime(log_df.index, unit='s')
-        log_df = log_df.swaplevel(axis=1)
 
         path_to_log_file = os.path.join(config.ROOT_DIR, self.path_to_log, f"detector_logs.h5")
         log_df.to_hdf(path_to_log_file, key='data')
+
+        for _, detector in self._traffic_detectors.items():
+            detector._detector_logs = []
