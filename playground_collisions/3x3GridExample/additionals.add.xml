@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<additional>
+    
+    <!-- Specify where the data should be output -->
+    <edgeData id="EMS Data" file=".\data\edgeData.xml" vTypes="EMS_Vehicle" excludeEmpty="true"/>
+    <edgeData id="Other Data" file=".\data\edgeData.xml" vTypes="DEFAULT_VEHTYPE" excludeEmpty="true"/>
+    <edgeData id="All Data" file =".\data\edgeData.xml" vTypes="DEFAULT_VEHTYPE EMS_Vehicle" excludeEmpty="true"/>
+
+</additional>
