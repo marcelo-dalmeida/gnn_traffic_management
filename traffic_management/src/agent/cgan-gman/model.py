@@ -1,16 +1,22 @@
-import tf_utils
 import tensorflow as tf
+
+import agent.gman.tf_utils as tf_utils
+import config
 
 
 def placeholder(P, Q, N):
-    X = tf.compat.v1.placeholder(shape=(None, P, N), dtype=tf.float32)
-    TE = tf.compat.v1.placeholder(shape=(None, P + Q, 2), dtype=tf.int32)
-    label = tf.compat.v1.placeholder(shape=(None, Q, N), dtype=tf.float32)
-    is_training = tf.compat.v1.placeholder(shape=(), dtype=tf.bool)
+    X = tf.compat.v1.placeholder(
+        shape=(None, P, N), dtype=tf.float32, name='X')
+    TE = tf.compat.v1.placeholder(
+        shape=(None, P + Q, 2), dtype=tf.int32, name='TE')
+    label = tf.compat.v1.placeholder(
+        shape=(None, Q, N), dtype=tf.float32, name='label')
+    is_training = tf.compat.v1.placeholder(
+        shape=(), dtype=tf.bool, name='is_training')
     return X, TE, label, is_training
 
 
-def FC(x, units, activations, bn, bn_decay, is_training, use_bias=True):
+def FC(x, units, activations, bn, bn_decay, is_training, use_bias=True, drop=None):
     if isinstance(units, int):
         units = [units]
         activations = [activations]
@@ -19,6 +25,8 @@ def FC(x, units, activations, bn, bn_decay, is_training, use_bias=True):
         activations = list(activations)
     assert type(units) == list
     for num_unit, activation in zip(units, activations):
+        if drop is not None:
+            x = tf_utils.dropout(x, drop=drop, is_training=is_training)
         x = tf_utils.conv2d(
             x, output_dims=num_unit, kernel_size=[1, 1], stride=[1, 1],
             padding='VALID', use_bias=use_bias, activation=activation,
@@ -171,7 +179,7 @@ def gatedFusion(HS, HT, D, bn, bn_decay, is_training):
     return H
 
 
-def STAttBlock(X, STE, K, d, bn, bn_decay, is_training, mask=False):
+def STAttBlock(X, STE, K, d, bn, bn_decay, is_training, mask=True):
     HS = spatialAttention(X, STE, K, d, bn, bn_decay, is_training)
     HT = temporalAttention(X, STE, K, d, bn, bn_decay, is_training, mask=mask)
     H = gatedFusion(HS, HT, K * d, bn, bn_decay, is_training)
@@ -227,12 +235,13 @@ def transformAttention(X, STE_P, STE_Q, K, d, bn, bn_decay, is_training):
     return X
 
 
-def GMAN(X, TE, SE, P, Q, T, L, K, d, bn, bn_decay, is_training):
+def GMAN(X, TE, SE, Y, T, bn, bn_decay, is_training):
     '''
     GMAN
     X:       [batch_size, P, N]
     TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
     SE:      [N, K * d]
+    Y:       labels/conditions [batch_size, C] c = # of classes (3)
     P:       number of history steps
     Q:       number of prediction steps
     T:       one day is divided into T steps
@@ -241,9 +250,18 @@ def GMAN(X, TE, SE, P, Q, T, L, K, d, bn, bn_decay, is_training):
     d:       dimension of each attention head outputs
     return:  [batch_size, Q, N]
     '''
+
+    P = config.AGENT.HISTORY_STEPS
+    Q = config.AGENT.PREDICTION_STEPS
+    L = config.AGENT.NUMBER_OF_STATT_BLOCKS
+    K = config.AGENT.NUMBER_OF_ATTENTION_HEADS
+    d = config.AGENT.HEAD_ATTENTION_OUTPUT_DIM
+
     D = K * d
     # input
     X = tf.expand_dims(X, axis=-1)
+
+    X = tf.concat(X, Y)  # concat the label
 
     X = FC(
         X, units=[D, D], activations=[tf.nn.relu, None],
@@ -264,95 +282,8 @@ def GMAN(X, TE, SE, P, Q, T, L, K, d, bn, bn_decay, is_training):
     # output
     X = FC(
         X, units=[D, 1], activations=[tf.nn.relu, None],
-        bn=bn, bn_decay=bn_decay, is_training=is_training)
-    return tf.squeeze(X, axis=3)
-
-
-def GMAN_gen(X, TE, SE, Y, P, Q, T, L, K, d, bn, bn_decay, is_training):
-    '''
-    GMAN
-    X:       [batch_size, P, N]
-    TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
-    SE:      [N, K * d]
-    Y:       Label: [[batch_size, C]
-    P:       number of history steps
-    Q:       number of prediction steps
-    T:       one day is divided into T steps
-    L:       number of STAtt blocks in the encoder/decoder
-    K:       number of attention heads
-    d:       dimension of each attention head outputs
-    return:  [batch_size, Q, N]
-    '''
-    D = K * d
-    # input
-    X = tf.expand_dims(X, axis=-1)
-
-    X = tf.concat(X, Y)  # add condition
-
-    X = FC(
-        X, units=[D, D], activations=[tf.nn.relu, None],
-        bn=bn, bn_decay=bn_decay, is_training=is_training)
-    # STE
-    STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
-    STE_P = STE[:, : P]
-    STE_Q = STE[:, P:]
-    # encoder
-    for _ in range(L):
-        X = STAttBlock(X, STE_P, K, d, bn, bn_decay, is_training)
-    # transAtt
-    X = transformAttention(
-        X, STE_P, STE_Q, K, d, bn, bn_decay, is_training)
-    # decoder
-    for _ in range(L):
-        X = STAttBlock(X, STE_Q, K, d, bn, bn_decay, is_training)
-    # output
-    X = FC(
-        X, units=[D, 1], activations=[tf.nn.relu, None],
-        bn=bn, bn_decay=bn_decay, is_training=is_training)
-    return tf.squeeze(X, axis=3)
-
-
-def GMAN_disc(X, TE, SE, Y, P, Q, T, L, K, d, bn, bn_decay, is_training):
-    '''
-    GMAN
-    X:       [batch_size, P, N]
-    TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
-    SE:      [N, K * d]
-    Y:       Label: [[batch_size, C]
-    P:       number of history steps
-    Q:       number of prediction steps
-    T:       one day is divided into T steps
-    L:       number of STAtt blocks in the encoder/decoder
-    K:       number of attention heads
-    d:       dimension of each attention head outputs
-    return:  [batch_size, Q, N]
-    '''
-    D = K * d
-    # input
-    X = tf.expand_dims(X, axis=-1)
-
-    X = tf.concat(X, Y)  # add condition
-
-    X = FC(
-        X, units=[D, D], activations=[tf.nn.relu, None],
-        bn=bn, bn_decay=bn_decay, is_training=is_training)
-    # STE
-    STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
-    STE_P = STE[:, : P]
-    STE_Q = STE[:, P:]
-    # encoder
-    for _ in range(L):
-        X = STAttBlock(X, STE_P, K, d, bn, bn_decay, is_training)
-    # transAtt
-    X = transformAttention(
-        X, STE_P, STE_Q, K, d, bn, bn_decay, is_training)
-    # decoder
-    for _ in range(L):
-        X = STAttBlock(X, STE_Q, K, d, bn, bn_decay, is_training)
-    # output
-    X = FC(
-        X, units=[D, 1], activations=[tf.nn.relu, None],
-        bn=bn, bn_decay=bn_decay, is_training=is_training)
+        bn=bn, bn_decay=bn_decay, is_training=is_training,
+        use_bias=True, drop=0.1)
     return tf.squeeze(X, axis=3)
 
 
@@ -368,15 +299,3 @@ def mae_loss(pred, label):
         condition=tf.math.is_nan(loss), x=0., y=loss)
     loss = tf.reduce_mean(loss)
     return loss
-
-# need to add the part that generates with the condition]
-    # condition (regular, anomaly-accident, anomaly-no accident)
-    # generator loss ?
-    # loss between generation and real input
-    # MAE
-
-
-# need to add part that discriminates with a gman
-# dsiminator loss ?
-# loss between labels
-# Categorical Cross-Entropy Los
