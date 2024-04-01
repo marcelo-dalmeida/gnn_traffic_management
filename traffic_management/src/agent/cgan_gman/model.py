@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-import agent.gman.tf_utils as tf_utils
+import agent.cgan_gman.tf_utils as tf_utils
 import config
 
 
@@ -9,11 +9,13 @@ def placeholder(P, Q, N):
         shape=(None, P, N), dtype=tf.float32, name='X')
     TE = tf.compat.v1.placeholder(
         shape=(None, P + Q, 2), dtype=tf.int32, name='TE')
+    Y = tf.compat.v1.placeholder(
+        shape=(None, 3), dtype=tf.int32, name='Y')
     label = tf.compat.v1.placeholder(
         shape=(None, Q, N), dtype=tf.float32, name='label')
     is_training = tf.compat.v1.placeholder(
         shape=(), dtype=tf.bool, name='is_training')
-    return X, TE, label, is_training
+    return X, TE, Y, label, is_training
 
 
 def FC(x, units, activations, bn, bn_decay, is_training, use_bias=True, drop=None):
@@ -235,7 +237,56 @@ def transformAttention(X, STE_P, STE_Q, K, d, bn, bn_decay, is_training):
     return X
 
 
-def GMAN(X, TE, SE, Y, T, bn, bn_decay, is_training):
+def GMAN(X, TE, SE, T, bn, bn_decay, is_training):
+    '''
+    GMAN
+    X:       [batch_size, P, N]
+    TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
+    SE:      [N, K * d]
+    P:       number of history steps
+    Q:       number of prediction steps
+    T:       one day is divided into T steps
+    L:       number of STAtt blocks in the encoder/decoder
+    K:       number of attention heads
+    d:       dimension of each attention head outputs
+    return:  [batch_size, Q, N]
+    '''
+
+    P = config.AGENT.HISTORY_STEPS
+    Q = config.AGENT.PREDICTION_STEPS
+    L = config.AGENT.NUMBER_OF_STATT_BLOCKS
+    K = config.AGENT.NUMBER_OF_ATTENTION_HEADS
+    d = config.AGENT.HEAD_ATTENTION_OUTPUT_DIM
+
+    D = K * d
+    # input
+    X = tf.expand_dims(X, axis=-1)
+
+    X = FC(
+        X, units=[D, D], activations=[tf.nn.relu, None],
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+    # STE
+    STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
+    STE_P = STE[:, : P]
+    STE_Q = STE[:, P:]
+    # encoder
+    for _ in range(L):
+        X = STAttBlock(X, STE_P, K, d, bn, bn_decay, is_training)
+    # transAtt
+    X = transformAttention(
+        X, STE_P, STE_Q, K, d, bn, bn_decay, is_training)
+    # decoder
+    for _ in range(L):
+        X = STAttBlock(X, STE_Q, K, d, bn, bn_decay, is_training)
+    # output
+    X = FC(
+        X, units=[D, 1], activations=[tf.nn.relu, None],
+        bn=bn, bn_decay=bn_decay, is_training=is_training,
+        use_bias=True, drop=0.1)
+    return tf.squeeze(X, axis=3)
+
+
+def GMAN_gen(X, TE, SE, Y, T, bn, bn_decay, is_training):
     '''
     GMAN
     X:       [batch_size, P, N]
@@ -287,6 +338,65 @@ def GMAN(X, TE, SE, Y, T, bn, bn_decay, is_training):
     return tf.squeeze(X, axis=3)
 
 
+def GMAN_disc(X, TE, SE, Y, T, bn, bn_decay, is_training):
+    '''
+    GMAN
+    X:       [batch_size, P, N]
+    TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
+    SE:      [N, K * d]
+    Y:       labels/conditions [batch_size, C] c = # of classes (3)
+    P:       number of history steps
+    Q:       number of prediction steps
+    T:       one day is divided into T steps
+    L:       number of STAtt blocks in the encoder/decoder
+    K:       number of attention heads
+    d:       dimension of each attention head outputs
+    return:  [batch_size, Q, N]
+    '''
+
+    P = config.AGENT.HISTORY_STEPS
+    Q = config.AGENT.PREDICTION_STEPS
+    L = config.AGENT.NUMBER_OF_STATT_BLOCKS
+    K = config.AGENT.NUMBER_OF_ATTENTION_HEADS
+    d = config.AGENT.HEAD_ATTENTION_OUTPUT_DIM
+
+    D = K * d
+    # input
+    X = tf.expand_dims(X, axis=-1)
+
+    X = tf.concat(X, Y)  # concat the label
+
+    X = FC(
+        X, units=[D, D], activations=[tf.nn.relu, None],
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+    # STE
+    STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
+    STE_P = STE[:, : P]
+    STE_Q = STE[:, P:]
+    # encoder
+    for _ in range(L):
+        X = STAttBlock(X, STE_P, K, d, bn, bn_decay, is_training)
+    # transAtt
+    X = transformAttention(
+        X, STE_P, STE_Q, K, d, bn, bn_decay, is_training)
+    # decoder
+    for _ in range(L):
+        X = STAttBlock(X, STE_Q, K, d, bn, bn_decay, is_training)
+    # output
+    X = FC(
+        X, units=[D, 1], activations=[tf.nn.relu, None],
+        bn=bn, bn_decay=bn_decay, is_training=is_training,
+        use_bias=True, drop=0.1)
+    X = tf.squeeze(X, axis=3)
+    N = X.shape[3]
+
+    X = tf.reshape(X, (-1, Q * N))
+
+    Y = tf.keras.layers.Dense(3, activation='sigmoid')(X)
+
+    return Y
+
+
 def mae_loss(pred, label):
     mask = tf.not_equal(label, 0)
     mask = tf.cast(mask, tf.float32)
@@ -299,3 +409,27 @@ def mae_loss(pred, label):
         condition=tf.math.is_nan(loss), x=0., y=loss)
     loss = tf.reduce_mean(loss)
     return loss
+
+
+def generator_loss(disc_generated_output, gen_output, target):
+    gan_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)(tf.ones_like(
+        disc_generated_output), disc_generated_output)
+
+    # Mean absolute error
+    l1_loss = mae_loss(gen_output, target)
+
+    total_gen_loss = gan_loss + (100 * l1_loss)
+
+    return total_gen_loss, gan_loss, l1_loss
+
+
+def discriminator_loss(disc_real_output, disc_generated_output):
+    real_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)(
+        tf.ones_like(disc_real_output), disc_real_output)
+
+    generated_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)(
+        tf.zeros_like(disc_generated_output), disc_generated_output)
+
+    total_disc_loss = real_loss + generated_loss
+
+    return total_disc_loss

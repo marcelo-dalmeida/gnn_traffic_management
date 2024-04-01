@@ -6,8 +6,8 @@ import datetime
 import numpy as np
 import tensorflow as tf
 
-import agent.gman.utils as utils
-import agent.gman.model as model
+import agent.cgan_gman.utils as utils
+import agent.cgan_gman.model as model
 
 
 def train():
@@ -39,50 +39,83 @@ def train():
 
     # train model
     utils.log_string(log, 'compiling model...')
+
     T = 24 * 60 // config.AGENT.TIME_SLOT
+
     num_train, _, N = trainX.shape
-    X, TE, label, is_training = model.placeholder(
+
+    X, TE, Y, label, is_training = model.placeholder(
         config.AGENT.HISTORY_STEPS, config.AGENT.PREDICTION_STEPS, N)
+
     global_step = tf.Variable(0, trainable=False)
+
     bn_momentum = tf.compat.v1.train.exponential_decay(
         0.5, global_step,
         decay_steps=config.AGENT.DECAY_EPOCH * num_train // config.AGENT.BATCH_SIZE,
         decay_rate=0.5, staircase=True)
+
     bn_decay = tf.minimum(0.99, 1 - bn_momentum)
-    pred = model.GMAN(
+
+    gen_pred = model.GMAN_gen(
         X,
         TE,
         SE,
+        Y,
         T,
         bn=True,
         bn_decay=bn_decay,
         is_training=is_training
     )
-    pred = pred * std + mean
-    loss = model.mae_loss(pred, label)
-    tf.compat.v1.add_to_collection('pred', pred)
-    tf.compat.v1.add_to_collection('loss', loss)
+    disc_pred = model.GMAN_disc(
+        gen_pred,
+        TE,
+        SE,
+        Y,
+        T,
+        bn=True,
+        bn_decay=bn_decay,
+        is_training=is_training
+    )
+
+    gen_pred = gen_pred * std + mean
+    disc_pred = disc_pred * std + mean
+
+    gen_loss = model.generator_loss(disc_pred, gen_pred, label)
+    disc_loss = model.discriminator_loss(X, disc_pred)
+
+    # tf.compat.v1.add_to_collection('pred', pred)
+    # tf.compat.v1.add_to_collection('loss', loss)
+
     learning_rate = tf.compat.v1.train.exponential_decay(
         config.AGENT.LEARNING_RATE, global_step,
         decay_steps=config.AGENT.DECAY_EPOCH * num_train // config.AGENT.BATCH_SIZE,
         decay_rate=0.7, staircase=True)
     learning_rate = tf.maximum(learning_rate, 1e-5)
-    optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
-    train_op = optimizer.minimize(loss, global_step=global_step)
+
+    gen_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
+    disc_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
+
+    gen_train_op = gen_optimizer.minimize(gen_loss, global_step=global_step)
+    disc_train_op = disc_optimizer.minimize(disc_loss, global_step=global_step)
+
     parameters = 0
     for variable in tf.compat.v1.trainable_variables():
         parameters += np.product([x.value for x in variable.get_shape()])
+
     utils.log_string(log, 'trainable parameters: {:,}'.format(parameters))
     utils.log_string(log, 'model compiled!')
+
     saver = tf.compat.v1.train.Saver()
     tf_config = tf.compat.v1.ConfigProto()
     tf_config.gpu_options.allow_growth = True
     sess = tf.compat.v1.Session(config=tf_config)
     sess.run(tf.compat.v1.global_variables_initializer())
+
     utils.log_string(log, '**** training model ****')
     num_val = valX.shape[0]
     wait = 0
     val_loss_min = np.inf
+
     for epoch in range(config.AGENT.MAX_EPOCH):
         if wait >= config.AGENT.PATIENCE:
             utils.log_string(log, 'early stop at epoch: %04d' % (epoch))
@@ -104,6 +137,7 @@ def train():
                 TE: trainTE[start_idx:end_idx],
                 label: trainY[start_idx:end_idx],
                 is_training: True}
+
             _, loss_batch = sess.run([train_op, loss], feed_dict=feed_dict)
             train_loss += loss_batch * (end_idx - start_idx)
         train_loss /= num_train
