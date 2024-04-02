@@ -14,26 +14,19 @@ from configs.scenario_config import ScenarioConfig
 from configs.experiment_config import ExperimentConfig
 from configs.agent_config import AgentConfig
 from configs.environment_config import EnvironmentConfig
+from const import CONST
 
 load_envs.load()
 
 VERSION = '0.1.0-dev'
 
 
-class CONST:
-    CAR = 'passenger'
-    BUS = 'bus'
-    EMERGENCY = 'emergency'
-    BUS_PASSENGER = 'bus_passenger'
-    PEDESTRIAN = 'pedestrian'
+_CONST = CONST
 
-    AVAILABLE_VEHICLE_ACTORS = [CAR, BUS, EMERGENCY]
-    AVAILABLE_PERSON_ACTORS = [BUS_PASSENGER]
 
-    TRAFFIC_LIGHT_SYSTEM = 'TRAFFIC_LIGHT_SYSTEM'
-    EXCLUSIVE_LANE_SYSTEM = 'EXCLUSIVE_LANE_SYSTEM'
+NEW = 'NEW::'
+DELETE = 'DELETE::'
 
-    AVAILABLE_CONTROL_SYSTEMS = [TRAFFIC_LIGHT_SYSTEM, EXCLUSIVE_LANE_SYSTEM]
 
 def _check_existing_experiment():
 
@@ -46,7 +39,7 @@ def _check_existing_experiment():
         experiment_name = config_data['NAME']
 
         if isinstance(experiment_name, list):
-            if experiment_name[0] == "DELETE::":
+            if experiment_name[0] == DELETE:
                 experiment_names = experiment_name[1:]
 
                 for experiment_name in experiment_names:
@@ -55,24 +48,26 @@ def _check_existing_experiment():
                 sys.exit()
 
             else:
-                raise ValueError("Experiment name is a list and it doesn't have the delete directive")
+                raise ValueError(f"Experiment name is a list and it doesn't have the {DELETE} directive")
 
-        raw_experiment_name = experiment_name.replace('NEW::', '')
+        raw_experiment_name = experiment_name.replace(NEW, '')
 
         path_to_config = os.path.join("config", raw_experiment_name)
 
         if os.path.isdir(os.path.join(ROOT_DIR, path_to_config)):
 
-            if "NEW::" in config_data['NAME']:
-                raise ValueError(f"This experiment already exists: {raw_experiment_name}")
+            if NEW in config_data['NAME']:
+                raise ValueError(f"This experiment already exists ({raw_experiment_name}) "
+                                 f"and it has the {NEW} directive")
 
             _set_experiment_name(experiment_name)
 
             return True, experiment_name
         else:
 
-            if 'NEW::' not in config_data['NAME']:
-                raise ValueError(f"This experiment does not exist: {raw_experiment_name}")
+            if NEW not in config_data['NAME']:
+                raise ValueError(f"This experiment does not exist ({raw_experiment_name}) "
+                                 f"and it doesn't have the {NEW} directive")
 
             return False, experiment_name
 
@@ -238,7 +233,7 @@ def _store_configs():
         json.dump(config_data, scenario_config_file, indent=4)
 
 
-ROOT_DIR = path.join(path.dirname(path.dirname(path.abspath(__file__))), 'output')
+ROOT_DIR = path.join(path.dirname(path.dirname(path.abspath(__file__))), 'output', 'traffic_management')
 CONFIG_DIR = path.join(path.dirname(path.dirname(path.abspath(__file__))), 'config')
 
 experiment_config_filepath = None
@@ -255,8 +250,8 @@ _load_configs(experiment_config_filepath=experiment_config_filepath,
 
 EXPERIMENT = ExperimentConfig
 
-if _experiment_name and 'NEW::' in _experiment_name:
-    _experiment_name = _experiment_name.replace('NEW::', '')
+if _experiment_name and NEW in _experiment_name:
+    _experiment_name = _experiment_name.replace(NEW, '')
     EXPERIMENT.NAME = _experiment_name
 
 AGENT = AgentConfig.get_config(EXPERIMENT.MODEL_NAME)

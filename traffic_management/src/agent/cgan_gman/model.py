@@ -4,18 +4,21 @@ import agent.cgan_gman.tf_utils as tf_utils
 import config
 
 
+LAMBDA = 100
+
+
 def placeholder(P, Q, N):
     X = tf.compat.v1.placeholder(
         shape=(None, P, N), dtype=tf.float32, name='X')
     TE = tf.compat.v1.placeholder(
         shape=(None, P + Q, 2), dtype=tf.int32, name='TE')
-    Y = tf.compat.v1.placeholder(
-        shape=(None, 3), dtype=tf.int32, name='Y')
+    trafpatY = tf.compat.v1.placeholder(
+        shape=(None, 3), dtype=tf.int32, name='trafpatY')
     label = tf.compat.v1.placeholder(
         shape=(None, Q, N), dtype=tf.float32, name='label')
     is_training = tf.compat.v1.placeholder(
         shape=(), dtype=tf.bool, name='is_training')
-    return X, TE, Y, label, is_training
+    return X, TE, trafpatY, label, is_training
 
 
 def FC(x, units, activations, bn, bn_decay, is_training, use_bias=True, drop=None):
@@ -286,13 +289,13 @@ def GMAN(X, TE, SE, T, bn, bn_decay, is_training):
     return tf.squeeze(X, axis=3)
 
 
-def GMAN_gen(X, TE, SE, Y, T, bn, bn_decay, is_training):
+def GMAN_gen(X, TE, SE, trafpatY, T, bn, bn_decay, is_training):
     '''
     GMAN
     X:       [batch_size, P, N]
     TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
     SE:      [N, K * d]
-    Y:       labels/conditions [batch_size, C] c = # of classes (3)
+    trafpatY:labels/conditions [batch_size, C] c = # of classes (3)
     P:       number of history steps
     Q:       number of prediction steps
     T:       one day is divided into T steps
@@ -312,7 +315,7 @@ def GMAN_gen(X, TE, SE, Y, T, bn, bn_decay, is_training):
     # input
     X = tf.expand_dims(X, axis=-1)
 
-    X = tf.concat(X, Y)  # concat the label
+    X = tf.concat(X, trafpatY)  # concat the label
 
     X = FC(
         X, units=[D, D], activations=[tf.nn.relu, None],
@@ -338,13 +341,13 @@ def GMAN_gen(X, TE, SE, Y, T, bn, bn_decay, is_training):
     return tf.squeeze(X, axis=3)
 
 
-def GMAN_disc(X, TE, SE, Y, T, bn, bn_decay, is_training):
+def GMAN_disc(X, gen_out, TE, SE, T, bn, bn_decay, is_training):
     '''
     GMAN
     X:       [batch_size, P, N]
+    gen_out: [batch_size, Q, N]
     TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
     SE:      [N, K * d]
-    Y:       labels/conditions [batch_size, C] c = # of classes (3)
     P:       number of history steps
     Q:       number of prediction steps
     T:       one day is divided into T steps
@@ -364,11 +367,18 @@ def GMAN_disc(X, TE, SE, Y, T, bn, bn_decay, is_training):
     # input
     X = tf.expand_dims(X, axis=-1)
 
-    X = tf.concat(X, Y)  # concat the label
-
     X = FC(
         X, units=[D, D], activations=[tf.nn.relu, None],
         bn=bn, bn_decay=bn_decay, is_training=is_training)
+
+    gen_out = tf.expand_dims(gen_out, axis=-1)
+
+    gen_out = FC(
+        gen_out, units=[D, D], activations=[tf.nn.relu, None],
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+
+    X = tf.concat(X, gen_out)  # concat pred
+
     # STE
     STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
     STE_P = STE[:, : P]
@@ -392,9 +402,9 @@ def GMAN_disc(X, TE, SE, Y, T, bn, bn_decay, is_training):
 
     X = tf.reshape(X, (-1, Q * N))
 
-    Y = tf.keras.layers.Dense(3, activation='sigmoid')(X)
+    trafpatY = tf.keras.layers.Dense(3, activation='sigmoid')(X)
 
-    return Y
+    return trafpatY
 
 
 def mae_loss(pred, label):
@@ -418,7 +428,7 @@ def generator_loss(disc_generated_output, gen_output, target):
     # Mean absolute error
     l1_loss = mae_loss(gen_output, target)
 
-    total_gen_loss = gan_loss + (100 * l1_loss)
+    total_gen_loss = gan_loss + (LAMBDA * l1_loss)
 
     return total_gen_loss, gan_loss, l1_loss
 

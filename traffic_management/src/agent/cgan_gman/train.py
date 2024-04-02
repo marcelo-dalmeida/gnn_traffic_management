@@ -11,7 +11,6 @@ import agent.cgan_gman.model as model
 
 
 def train():
-
     start = time.time()
 
     import config
@@ -27,7 +26,9 @@ def train():
 
     # load data
     utils.log_string(log, 'loading data...')
-    (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY, SE,
+    # (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY, SE,
+    #  mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
+    (trainX, trainTE, trainY, traintrafpatY, valX, valTE, valY, valtrafpatY, testX, testTE, testY, testtrafpatY, SE,
      mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
     utils.log_string(log, 'trainX: %s\ttrainY: %s' %
                      (trainX.shape, trainY.shape))
@@ -44,7 +45,7 @@ def train():
 
     num_train, _, N = trainX.shape
 
-    X, TE, Y, label, is_training = model.placeholder(
+    X, TE, trafpatY, label, is_training = model.placeholder(
         config.AGENT.HISTORY_STEPS, config.AGENT.PREDICTION_STEPS, N)
 
     global_step = tf.Variable(0, trainable=False)
@@ -60,17 +61,17 @@ def train():
         X,
         TE,
         SE,
-        Y,
+        trafpatY,
         T,
         bn=True,
         bn_decay=bn_decay,
         is_training=is_training
     )
     disc_pred = model.GMAN_disc(
+        X,
         gen_pred,
         TE,
         SE,
-        Y,
         T,
         bn=True,
         bn_decay=bn_decay,
@@ -114,7 +115,8 @@ def train():
     utils.log_string(log, '**** training model ****')
     num_val = valX.shape[0]
     wait = 0
-    val_loss_min = np.inf
+    gen_val_loss_min = np.inf
+    disc_val_loss_min = np.inf
 
     for epoch in range(config.AGENT.MAX_EPOCH):
         if wait >= config.AGENT.PATIENCE:
@@ -125,53 +127,124 @@ def train():
         trainX = trainX[permutation]
         trainTE = trainTE[permutation]
         trainY = trainY[permutation]
+
         # train loss
         start_train = time.time()
-        train_loss = 0
+        gen_train_loss = 0
+        disc_train_loss = 0
         num_batch = math.ceil(num_train / config.AGENT.BATCH_SIZE)
         for batch_idx in range(num_batch):
             start_idx = batch_idx * config.AGENT.BATCH_SIZE
             end_idx = min(num_train, (batch_idx + 1) * config.AGENT.BATCH_SIZE)
-            feed_dict = {
+            gen_feed_dict = {
                 X: trainX[start_idx:end_idx],
                 TE: trainTE[start_idx:end_idx],
+                trafpatY: traintrafpatY[start_idx:end_idx],
                 label: trainY[start_idx:end_idx],
                 is_training: True}
 
-            _, loss_batch = sess.run([train_op, loss], feed_dict=feed_dict)
-            train_loss += loss_batch * (end_idx - start_idx)
-        train_loss /= num_train
+            disc_real_feed_dict = {
+                X: trainX[start_idx:end_idx],
+                label: trainY[start_idx:end_idx],
+                TE: trainTE[start_idx:end_idx],
+                trafpatY: traintrafpatY[start_idx:end_idx],
+                is_training: True}
+
+            with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+                gen_output = gen_pred(**gen_feed_dict)
+
+                disc_generated_feed_dict = {
+                    X: trainX[start_idx:end_idx],
+                    label: gen_output,
+                    TE: trainTE[start_idx:end_idx],
+                    trafpatY: traintrafpatY[start_idx:end_idx],
+                    is_training: True}
+
+                disc_real_output = disc_pred(**disc_real_feed_dict)
+                disc_generated_output = disc_pred(**disc_generated_feed_dict)
+
+                gen_total_loss, gen_gan_loss, gen_l1_loss = gen_loss(disc_generated_output, gen_output, trainY[start_idx:end_idx])
+                disc_total_loss = disc_loss(disc_real_output, disc_generated_output)
+
+            generator_gradients = gen_tape.gradient(gen_total_loss, gen_pred.trainable_variables)
+            discriminator_gradients = disc_tape.gradient(disc_total_loss, disc_pred.trainable_variables)
+
+            gen_optimizer.apply_gradients(zip(generator_gradients, gen_pred.trainable_variables))
+            disc_optimizer.apply_gradients(zip(discriminator_gradients, disc_pred.trainable_variables))
+
+            #_, loss_batch = sess.run([train_op, loss], feed_dict=feed_dict)
+
+            gen_loss_batch = gen_total_loss
+            disc_loss_batch = disc_total_loss
+
+            gen_train_loss += gen_loss_batch * (end_idx - start_idx)
+            disc_train_loss += disc_loss_batch * (end_idx - start_idx)
+        gen_train_loss /= num_train
+        disc_train_loss /= num_train
         end_train = time.time()
+
         # val loss
         start_val = time.time()
-        val_loss = 0
+        gen_val_loss = 0
+        disc_val_loss = 0
         num_batch = math.ceil(num_val / config.AGENT.BATCH_SIZE)
         for batch_idx in range(num_batch):
             start_idx = batch_idx * config.AGENT.BATCH_SIZE
             end_idx = min(num_val, (batch_idx + 1) * config.AGENT.BATCH_SIZE)
-            feed_dict = {
+
+            gen_feed_dict = {
                 X: valX[start_idx:end_idx],
                 TE: valTE[start_idx:end_idx],
+                trafpatY: valtrafpatY[start_idx:end_idx],
                 label: valY[start_idx:end_idx],
                 is_training: False}
-            loss_batch = sess.run(loss, feed_dict=feed_dict)
-            val_loss += loss_batch * (end_idx - start_idx)
-        val_loss /= num_val
+
+            gen_output = gen_pred(**gen_feed_dict)
+
+            disc_generated_feed_dict = {
+                X: valX[start_idx:end_idx],
+                label: gen_output,
+                TE: valTE[start_idx:end_idx],
+                trafpatY: valtrafpatY[start_idx:end_idx],
+                is_training: False}
+
+            disc_generated_output = disc_pred(**disc_generated_feed_dict)
+
+            gen_total_loss, _, _ = gen_loss(disc_generated_output, gen_output, valY[start_idx:end_idx])
+            disc_total_loss = disc_loss(disc_real_output, disc_generated_output)
+
+            # loss_batch = sess.run(loss, feed_dict=feed_dict)
+
+            gen_val_loss += gen_total_loss * (end_idx - start_idx)
+            disc_val_loss += disc_total_loss * (end_idx - start_idx)
+        gen_val_loss /= num_val
+        disc_val_loss /= num_val
         end_val = time.time()
+
         utils.log_string(
             log,
             '%s | epoch: %04d/%d, training time: %.1fs, inference time: %.1fs' %
             (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), epoch + 1,
              config.AGENT.MAX_EPOCH, end_train - start_train, end_val - start_val))
         utils.log_string(
-            log, 'train loss: %.4f, val_loss: %.4f' % (train_loss, val_loss))
-        if val_loss <= val_loss_min:
+            log, 'gen train loss: %.4f, gen val_loss: %.4f' % (gen_train_loss, gen_val_loss))
+        utils.log_string(
+            log, 'disc train loss: %.4f, disc val_loss: %.4f' % (disc_train_loss, disc_val_loss))
+        if gen_val_loss <= gen_val_loss_min:
             utils.log_string(
                 log,
-                'val loss decrease from %.4f to %.4f, saving model to %s' %
-                (val_loss_min, val_loss, os.path.join(config.ROOT_DIR, model_file)))
+                'gen val loss decrease from %.4f to %.4f, saving model to %s' %
+                (gen_val_loss_min, gen_val_loss, os.path.join(config.ROOT_DIR, model_file)))
             wait = 0
-            val_loss_min = val_loss
+            gen_val_loss_min = gen_val_loss
+            saver.save(sess, os.path.join(config.ROOT_DIR, model_file))
+        if disc_val_loss <= disc_val_loss_min:
+            utils.log_string(
+                log,
+                'disc val loss decrease from %.4f to %.4f, saving model to %s' %
+                (disc_val_loss_min, disc_val_loss, os.path.join(config.ROOT_DIR, model_file)))
+            wait = 0
+            disc_val_loss_min = disc_val_loss
             saver.save(sess, os.path.join(config.ROOT_DIR, model_file))
         else:
             wait += 1
@@ -191,24 +264,52 @@ def train():
     for batch_idx in range(num_batch):
         start_idx = batch_idx * config.AGENT.BATCH_SIZE
         end_idx = min(num_train, (batch_idx + 1) * config.AGENT.BATCH_SIZE)
-        feed_dict = {
-            X: trainX[start_idx: end_idx],
-            TE: trainTE[start_idx: end_idx],
+
+        gen_feed_dict = {
+            X: trainX[start_idx:end_idx],
+            TE: trainTE[start_idx:end_idx],
+            trafpatY: traintrafpatY[start_idx:end_idx],
             is_training: False}
-        pred_batch = sess.run(pred, feed_dict=feed_dict)
-        trainPred.append(pred_batch)
+
+        gen_output = gen_pred(**gen_feed_dict)
+
+        disc_generated_feed_dict = {
+            X: trainX[start_idx:end_idx],
+            label: gen_output,
+            TE: trainTE[start_idx:end_idx],
+            is_training: False}
+
+        disc_generated_output = disc_pred(**disc_generated_feed_dict)
+
+        # pred_batch = sess.run(pred, feed_dict=feed_dict)
+
+        trainPred.append(disc_generated_output)
     trainPred = np.concatenate(trainPred, axis=0)
     valPred = []
     num_batch = math.ceil(num_val / config.AGENT.BATCH_SIZE)
     for batch_idx in range(num_batch):
         start_idx = batch_idx * config.AGENT.BATCH_SIZE
         end_idx = min(num_val, (batch_idx + 1) * config.AGENT.BATCH_SIZE)
-        feed_dict = {
-            X: valX[start_idx: end_idx],
-            TE: valTE[start_idx: end_idx],
+
+        gen_feed_dict = {
+            X: valX[start_idx:end_idx],
+            TE: valTE[start_idx:end_idx],
+            trafpatY: valtrafpatY[start_idx:end_idx],
             is_training: False}
-        pred_batch = sess.run(pred, feed_dict=feed_dict)
-        valPred.append(pred_batch)
+
+        gen_output = gen_pred(**gen_feed_dict)
+
+        disc_generated_feed_dict = {
+            X: valX[start_idx:end_idx],
+            label: gen_output,
+            TE: valTE[start_idx:end_idx],
+            is_training: False}
+
+        disc_generated_output = disc_pred(**disc_generated_feed_dict)
+
+        # pred_batch = sess.run(pred, feed_dict=feed_dict)
+
+        valPred.append(disc_generated_output)
     valPred = np.concatenate(valPred, axis=0)
     testPred = []
     num_batch = math.ceil(num_test / config.AGENT.BATCH_SIZE)
@@ -216,12 +317,26 @@ def train():
     for batch_idx in range(num_batch):
         start_idx = batch_idx * config.AGENT.BATCH_SIZE
         end_idx = min(num_test, (batch_idx + 1) * config.AGENT.BATCH_SIZE)
-        feed_dict = {
+
+        gen_feed_dict = {
             X: testX[start_idx:end_idx],
             TE: testTE[start_idx:end_idx],
+            trafpatY: testtrafpatY[start_idx:end_idx],
             is_training: False}
-        pred_batch = sess.run(pred, feed_dict=feed_dict)
-        testPred.append(pred_batch)
+
+        gen_output = gen_pred(**gen_feed_dict)
+
+        disc_generated_feed_dict = {
+            X: testX[start_idx:end_idx],
+            label: gen_output,
+            TE: testTE[start_idx:end_idx],
+            is_training: False}
+
+        disc_generated_output = disc_pred(**disc_generated_feed_dict)
+
+        # pred_batch = sess.run(pred, feed_dict=feed_dict)
+
+        testPred.append(disc_generated_output)
     end_test = time.time()
     testPred = np.concatenate(testPred, axis=0)
     train_mae, train_rmse, train_mape = utils.metric(trainPred, trainY)
