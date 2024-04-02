@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 
 import agent.gman.utils as utils
-from agent.gman import model
+import agent.gman.model as model
 
 
 def train():
