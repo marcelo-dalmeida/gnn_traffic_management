@@ -29,6 +29,24 @@ def run():
         traci.simulationStep()
         step += 1
 
+        # Count the number of lanes
+        if step == 1:
+            print(traci.edge.getLaneNumber("-E9"))
+            print(traci.edge.getLaneNumber("E9"))
+
+        # Stop the vehicle, move it to the right, and enlarge it to take up multiple lanes
+        if step == 5:
+            veh_id_list = traci.edge.getLastStepVehicleIDs("-E9")
+            accident_ID = str(veh_id_list[0])
+            traci.vehicle.setWidth(accident_ID, 7.2)
+            traci.vehicle.setSpeed(accident_ID, 0.0)
+            x, y = traci.vehicle.getPosition(accident_ID)
+            print(x, y)
+            traci.vehicle.changeLaneRelative(accident_ID, 0, 100)   # This is needed to prevent the vehicle from weaving in place
+            traci.vehicle.moveToXY(vehID=accident_ID, edgeID="-E9", lane=0, x=(x + 6.3), y=y, angle=0, keepRoute=0)
+        if step == 6:
+            print(traci.vehicle.getPosition(accident_ID))
+
         # Cause an "accident" at time step 100 on E11
         if step == 100:
             veh_id_list = traci.edge.getLastStepVehicleIDs("E11")
