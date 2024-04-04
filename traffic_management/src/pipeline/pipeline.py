@@ -6,6 +6,7 @@ from environment.environment import Environment
 from pipeline.pipeline_utils import dataset_generator
 from utils import simulation_util
 
+import agent.cgan_gman.train as cgan_gman_train
 import agent.gman.train as gman_train
 import agent.gman.test as gman_test
 
@@ -21,7 +22,7 @@ class Pipeline:
 
         # train
         start_t = time.time()
-        gman_train.train()
+        cgan_gman_train.train()
 
         end_t = time.time()
         with open(os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, "timing.txt"), "a+") as file:

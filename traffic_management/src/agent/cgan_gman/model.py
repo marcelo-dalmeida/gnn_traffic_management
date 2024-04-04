@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 
 import agent.cgan_gman.tf_utils as tf_utils
@@ -14,11 +15,13 @@ def placeholder(P, Q, N):
         shape=(None, P + Q, 2), dtype=tf.int32, name='TE')
     trafpatY = tf.compat.v1.placeholder(
         shape=(None, 3), dtype=tf.int32, name='trafpatY')
+    genTE = tf.compat.v1.placeholder(
+        shape=(None, P + Q, 2), dtype=tf.int32, name='genTE')
     label = tf.compat.v1.placeholder(
         shape=(None, Q, N), dtype=tf.float32, name='label')
     is_training = tf.compat.v1.placeholder(
         shape=(), dtype=tf.bool, name='is_training')
-    return X, TE, trafpatY, label, is_training
+    return X, TE, trafpatY, genTE, label, is_training
 
 
 def FC(x, units, activations, bn, bn_decay, is_training, use_bias=True, drop=None):
@@ -240,6 +243,64 @@ def transformAttention(X, STE_P, STE_Q, K, d, bn, bn_decay, is_training):
     return X
 
 
+def trafpat_transformAttention(X, STE_P, STE_Q, trafpat, K, d, bn, bn_decay, is_training):
+    '''
+    transform attention mechanism
+    X:      [batch_size, P, N, D]
+    STE_P:  [batch_size, P, N, D]
+    STE_Q:  [batch_size, Q, N, D]
+    K:      number of attention heads
+    d:      dimension of each attention outputs
+    return: [batch_size, Q, N, D]
+    '''
+
+    dense_layer = tf.keras.layers.Dense(d)
+    transformed_trafpat = dense_layer(trafpat)
+
+    D = K * d
+
+    # query: [batch_size, Q, N, K * d]
+    # key:   [batch_size, P, N, K * d]
+    # value: [batch_size, P, N, K * d]
+    query = FC(
+        STE_Q, units=D, activations=tf.nn.relu,
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+    key = FC(
+        STE_P, units=D, activations=tf.nn.relu,
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+    value = FC(
+        X, units=D, activations=tf.nn.relu,
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+    # query: [K * batch_size, Q, N, d]
+    # key:   [K * batch_size, P, N, d]
+    # value: [K * batch_size, P, N, d]
+    query = tf.concat(tf.split(query, K, axis=-1), axis=0)
+    key = tf.concat(tf.split(key, K, axis=-1), axis=0)
+    value = tf.concat(tf.split(value, K, axis=-1), axis=0)
+    # query: [K * batch_size, N, Q, d]
+    # key:   [K * batch_size, N, d, P]
+    # value: [K * batch_size, N, P, d]
+    query += transformed_trafpat
+    key += transformed_trafpat
+
+    query = tf.transpose(query, perm=(0, 2, 1, 3))
+    key = tf.transpose(key, perm=(0, 2, 3, 1))
+    value = tf.transpose(value, perm=(0, 2, 1, 3))
+
+    # [K * batch_size, N, Q, P]
+    attention = tf.matmul(query, key)
+    attention /= (d ** 0.5)
+    attention = tf.nn.softmax(attention, axis=-1)
+    # [batch_size, Q, N, D]
+    X = tf.matmul(attention, value)
+    X = tf.transpose(X, perm=(0, 2, 1, 3))
+    X = tf.concat(tf.split(X, K, axis=0), axis=-1)
+    X = FC(
+        X, units=[D, D], activations=[tf.nn.relu, None],
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
+    return X
+
+
 def GMAN(X, TE, SE, T, bn, bn_decay, is_training):
     '''
     GMAN
@@ -311,11 +372,13 @@ def GMAN_gen(X, TE, SE, trafpatY, T, bn, bn_decay, is_training):
     K = config.AGENT.NUMBER_OF_ATTENTION_HEADS
     d = config.AGENT.HEAD_ATTENTION_OUTPUT_DIM
 
+    # X = tf.keras.layers.Input(shape=X.shape.as_list()[1:], dtype=X.dtype)
+    # TE = tf.keras.layers.Input(shape=TE.shape.as_list()[1:], dtype=TE.dtype)
+    # trafpatY = tf.keras.layers.Input(shape=trafpatY.shape.as_list(), dtype=trafpatY.dtype)
+
     D = K * d
     # input
     X = tf.expand_dims(X, axis=-1)
-
-    X = tf.concat(X, trafpatY)  # concat the label
 
     X = FC(
         X, units=[D, D], activations=[tf.nn.relu, None],
@@ -324,12 +387,16 @@ def GMAN_gen(X, TE, SE, trafpatY, T, bn, bn_decay, is_training):
     STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
     STE_P = STE[:, : P]
     STE_Q = STE[:, P:]
+
+    # trafpat
+    trafpatY = tf.cast(trafpatY, dtype=tf.float32)
+
     # encoder
     for _ in range(L):
         X = STAttBlock(X, STE_P, K, d, bn, bn_decay, is_training)
     # transAtt
-    X = transformAttention(
-        X, STE_P, STE_Q, K, d, bn, bn_decay, is_training)
+    X = trafpat_transformAttention(
+        X, STE_P, STE_Q, trafpatY, K, d, bn, bn_decay, is_training)
     # decoder
     for _ in range(L):
         X = STAttBlock(X, STE_Q, K, d, bn, bn_decay, is_training)
@@ -338,15 +405,22 @@ def GMAN_gen(X, TE, SE, trafpatY, T, bn, bn_decay, is_training):
         X, units=[D, 1], activations=[tf.nn.relu, None],
         bn=bn, bn_decay=bn_decay, is_training=is_training,
         use_bias=True, drop=0.1)
-    return tf.squeeze(X, axis=3)
+
+    X = tf.squeeze(X, axis=3)
+
+    # tf.compat.v1.keras.backend.get_session().run(tf.compat.v1.global_variables_initializer())
+    #
+    # return tf.keras.Model(inputs=[X, TE, trafpatY], outputs=X)
+    return X
 
 
-def GMAN_disc(X, gen_out, TE, SE, T, bn, bn_decay, is_training):
+def GMAN_disc(X, gen_out, TE, genTE, SE, T, bn, bn_decay, is_training):
     '''
     GMAN
     X:       [batch_size, P, N]
     gen_out: [batch_size, Q, N]
     TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
+    genTE:   [batch_size, P + Q, 2] (time-of-day, day-of-week)
     SE:      [N, K * d]
     P:       number of history steps
     Q:       number of prediction steps
@@ -363,6 +437,11 @@ def GMAN_disc(X, gen_out, TE, SE, T, bn, bn_decay, is_training):
     K = config.AGENT.NUMBER_OF_ATTENTION_HEADS
     d = config.AGENT.HEAD_ATTENTION_OUTPUT_DIM
 
+    # X = tf.keras.layers.Input(shape=X.shape.as_list()[1:], dtype=X.dtype)
+    # gen_out = tf.keras.layers.Input(shape=gen_out.shape.as_list()[1:], dtype=gen_out.dtype)
+    # TE = tf.keras.layers.Input(shape=TE.shape.as_list()[1:], dtype=TE.dtype)
+    # genTE = tf.keras.layers.Input(shape=genTE.shape.as_list()[1:], dtype=genTE.dtype)
+
     D = K * d
     # input
     X = tf.expand_dims(X, axis=-1)
@@ -377,18 +456,33 @@ def GMAN_disc(X, gen_out, TE, SE, T, bn, bn_decay, is_training):
         gen_out, units=[D, D], activations=[tf.nn.relu, None],
         bn=bn, bn_decay=bn_decay, is_training=is_training)
 
-    X = tf.concat(X, gen_out)  # concat pred
+    X = tf.concat((X, gen_out), axis=2)  # concat pred
 
     # STE
     STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
+    genSTE = STEmbedding(SE, genTE, T, D, bn, bn_decay, is_training)
+    STE = tf.concat((STE, genSTE), axis=2)  # concat STE
     STE_P = STE[:, : P]
     STE_Q = STE[:, P:]
+
     # encoder
     for _ in range(L):
         X = STAttBlock(X, STE_P, K, d, bn, bn_decay, is_training)
     # transAtt
     X = transformAttention(
         X, STE_P, STE_Q, K, d, bn, bn_decay, is_training)
+
+    # Reduces to the original input size
+    shape = X.get_shape().as_list()
+    X = tf.reshape(X, [-1, shape[2]])
+    X = tf.keras.layers.Dense(shape[2] // 2)(X)
+    X = tf.reshape(X, [-1, shape[1], shape[2] // 2, shape[3]])
+
+    shape = STE_Q.get_shape().as_list()
+    STE_Q = tf.reshape(STE_Q, [-1, shape[2]])
+    STE_Q = tf.keras.layers.Dense(shape[2] // 2)(STE_Q)
+    STE_Q = tf.reshape(STE_Q, [-1, shape[1], shape[2] // 2, shape[3]])
+
     # decoder
     for _ in range(L):
         X = STAttBlock(X, STE_Q, K, d, bn, bn_decay, is_training)
@@ -398,12 +492,15 @@ def GMAN_disc(X, gen_out, TE, SE, T, bn, bn_decay, is_training):
         bn=bn, bn_decay=bn_decay, is_training=is_training,
         use_bias=True, drop=0.1)
     X = tf.squeeze(X, axis=3)
-    N = X.shape[3]
+    N = X.shape[2]
 
     X = tf.reshape(X, (-1, Q * N))
 
-    trafpatY = tf.keras.layers.Dense(3, activation='sigmoid')(X)
+    trafpatY = tf.keras.layers.Dense(3, activation='softmax')(X)
 
+    # tf.compat.v1.keras.backend.get_session().run(tf.compat.v1.global_variables_initializer())
+    #
+    # return tf.keras.Model(inputs=[X, gen_out, TE, genTE], outputs=trafpatY)
     return trafpatY
 
 

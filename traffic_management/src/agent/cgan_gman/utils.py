@@ -44,8 +44,12 @@ def seq2instance(data, P, Q):
 
 def loadData(dataset_file, attribute):
     # Traffic
-    df = pd.read_hdf(os.path.join(config.ROOT_DIR, dataset_file),
-                     key='data').loc[:, attribute]
+    df = pd.read_hdf(os.path.join(config.ROOT_DIR, dataset_file), key='data')
+
+    trafpatY = df.loc[:, 'traffic_pattern'].values
+
+    df = df.loc[:, attribute]
+
     Traffic = df.values
     # train/val/test
     num_step = df.shape[0]
@@ -55,6 +59,9 @@ def loadData(dataset_file, attribute):
     train = Traffic[: train_steps]
     val = Traffic[train_steps: train_steps + val_steps]
     test = Traffic[-test_steps:]
+
+    traintrafpatY, valtrafpatY, testtrafpatY = trafpatY[: train_steps], trafpatY[train_steps: train_steps + val_steps], trafpatY[-test_steps:]
+
     # X, Y
     trainX, trainY = seq2instance(
         train, config.AGENT.HISTORY_STEPS, config.AGENT.PREDICTION_STEPS)
@@ -103,5 +110,7 @@ def loadData(dataset_file, attribute):
                           config.AGENT.PREDICTION_STEPS)
     testTE = np.concatenate(testTE, axis=1).astype(np.int32)
 
-    return (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY,
+    return (trainX, trainTE, trainY, traintrafpatY,
+            valX, valTE, valY, valtrafpatY,
+            testX, testTE, testY, testtrafpatY,
             SE, mean, std)

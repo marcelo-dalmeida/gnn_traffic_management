@@ -139,6 +139,8 @@ class IntersectionTrafficDetectorSystem:
         log_df.index = log_df.index.astype(int)
         log_df.index = pd.to_datetime(log_df.index, unit='s')
 
+        log_df['traffic_pattern'] = 'regular'
+
         path_to_log_file = os.path.join(config.ROOT_DIR, self.path_to_log, f"detector_logs.h5")
         log_df.to_hdf(path_to_log_file, key='data')
 
