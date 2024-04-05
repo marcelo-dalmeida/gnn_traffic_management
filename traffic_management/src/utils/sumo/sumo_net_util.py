@@ -842,7 +842,7 @@ def get_intersection_edges(net_xml, intersection_id, multi_intersection_config=N
     if edge_type == 'all':
         edges.extend(
             get_intersection_edges(
-                net_xml, intersection_id, _sorted, multi_intersection_config, edge_type='outgoing')
+                net_xml, intersection_id, multi_intersection_config, _sorted, edge_type='outgoing')
         )
 
     return edges

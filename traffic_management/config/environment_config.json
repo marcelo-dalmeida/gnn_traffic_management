@@ -1,5 +1,14 @@
 {
     "DETECTOR_EXTENSION": 100,
     "USE_GUI": false,
-    "DEBUG": false
+    "DEBUG": false,
+    "DETECTOR_ROAD_TYPE": [
+        "highway.primary",
+        "highway.primary_link",
+        "highway.secondary",
+        "highway.secondary_link",
+        "highway.tertiary",
+        "highway.tertiary_link",
+        "highway.residential"
+    ]
 }

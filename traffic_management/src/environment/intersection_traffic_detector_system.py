@@ -115,6 +115,13 @@ class IntersectionTrafficDetectorSystem:
             is_border = intersection_id in border_intersection_map
 
             if (is_intersection or is_border) and intersection_id not in detectors:
+
+                edges = sumo_net_util.get_intersection_edges(
+                    self._net_xml, intersection_id, config.SCENARIO.MULTI_INTERSECTION_CONFIG, _sorted=False)
+
+                if all([edge.get('type') not in config.ENVIRONMENT.DETECTOR_ROAD_TYPE for edge in edges]):
+                    continue
+
                 detectors[intersection_id] = IntersectionTrafficDetector(
                     intersection_id, self.do_evaluate_metrics, self.do_include_analysis_data)
 
