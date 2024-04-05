@@ -43,14 +43,16 @@ class IntersectionTrafficDetector:
         maximum_detection_length, maximum_detection_time = (
             self._get_maximum_detector_length_and_time(config.ENVIRONMENT.DETECTOR_EXTENSION))
 
-        self.subscription_extension = (
+        self._subscription_extension = (
             sumo_util.get_edge_based_subscription_extension(
                 self._net_xml, self.entering_edges, self.exiting_edges, maximum_detection_length, maximum_detection_time
             ))
 
+        self._detectors = self._register_detectors()
+
         self.expanded_edge_ids = np.unique([
             edge_tuple[0]
-            for edge_tuples in self.subscription_extension.values()
+            for edge_tuples in self._detectors.values()
             for edge_tuple in edge_tuples
         ]).tolist()
 
@@ -58,7 +60,7 @@ class IntersectionTrafficDetector:
 
         self.detector_ids = [
             f"{self.intersection_id}__{detector_id}"
-            for detector_id in self.subscription_extension.keys()
+            for detector_id in self._detectors.keys()
         ]
 
         self.reset(execution_name)
@@ -96,7 +98,7 @@ class IntersectionTrafficDetector:
     def _update_vehicle_subscription(self):
 
         self._detector_vehicle_subscription = collections.defaultdict(list)
-        for detector_id, edge_tuples in self.subscription_extension.items():
+        for detector_id, edge_tuples in self._detectors.items():
             for edge_id, _, _, _, _ in edge_tuples:
 
                 edge_additional_info = self.detector_additional_info[detector_id][edge_id]
@@ -129,6 +131,15 @@ class IntersectionTrafficDetector:
             vehicle_data_subscription = [self._data_subscription[VEHICLE][vehicle_id] for vehicle_id in vehicles]
             self._detector_vehicle_speed[detector_id] = sumo_traci_util.get_average_speed(vehicle_data_subscription)
 
+    def _register_detectors(self):
+        detectors = {}
+        for edge_id, value in self._subscription_extension.items():
+            edge = sumo_net_util.get_edge(self._net_xml, edge_id)
+            if edge.get('type') in config.ENVIRONMENT.DETECTOR_ROAD_TYPE:
+                detectors[edge_id] = value
+
+        return detectors
+
     def log(self):
 
         current_time = self._data_subscription[SIMULATION][tc.VAR_TIME]
@@ -138,15 +149,15 @@ class IntersectionTrafficDetector:
         data = {
             "volume": {
                 detector_id: self._detector_vehicle_count[detector_id]
-                for detector_id in self.subscription_extension.keys()
+                for detector_id in self._detectors.keys()
             },
             "speed": {
                 detector_id: self._detector_vehicle_speed[detector_id]
-                for detector_id in self.subscription_extension.keys()
+                for detector_id in self._detectors.keys()
             }
         }
 
-        for detector_id in self.subscription_extension.keys():
+        for detector_id in self._detectors.keys():
             self._detector_logs[current_time].append({
                 f"{self.intersection_id}_{detector_id}": {
                     "volume": data["volume"][detector_id],
@@ -158,7 +169,7 @@ class IntersectionTrafficDetector:
         self.detector_additional_info = collections.defaultdict(dict)
 
         # get vehicle list
-        for detector_id, edge_tuples in self.subscription_extension.items():
+        for detector_id, edge_tuples in self._detectors.items():
 
             for edge_id, edge_length, accumulated_detection_length, detection_length, edge_type in edge_tuples:
 

@@ -7,7 +7,7 @@
     <!-- VTypes -->
     <!-- Set tau="< 1" if you want rear-ends to be possible -->
     <!-- Tau is inversely proportional with accident likelihood -->
-    <vType id="DEFAULT_VEHTYPE" jmDriveAfterRedTime="10" jmDriveRedSpeed="0.0" tau="0.99">
+    <vType id="DEFAULT_VEHTYPE" jmDriveAfterRedTime="10" jmDriveRedSpeed="0.0">
         <param key="collisionMinGapFactor" value="0"/>
     </vType>
     <vType id="EMS_Vehicle" speedFactor="normc(1.50,0.00)" vClass="emergency" impatience="1.00" guiShape="emergency" lcKeepRight="0.0" lcSublane="0.0" lcPushy="1.0" lcImpatience="10" lcOvertakeRight="1.0" jmDriveAfterYellowTime="300" jmDriveAfterRedTime="300" jmDriveRedSpeed="13.89" jmIgnoreKeepClearTime="0" jmIgnoreFoeSpeed="20.0" jmIgnoreFoeProb="1.0">
