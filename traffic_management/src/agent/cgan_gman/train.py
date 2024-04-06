@@ -15,19 +15,15 @@ def train():
 
     import config
 
-    dataset_file = os.path.join(config.PATH_TO_RECORDS, 'data', 'dataset.h5')
+    dataset_file = os.path.join(config.PATH_TO_DATA, 'data', 'dataset.h5')
 
-    log_file = os.path.join(config.PATH_TO_RECORDS,
-                            f"{config.EXPERIMENT.SCENARIO_NAME}_gman_log")
+    log_file = os.path.join(config.PATH_TO_MODEL, f"{config.EXPERIMENT.SCENARIO_NAME}_gman_log")
     log = open(os.path.join(config.ROOT_DIR, log_file), 'w')
 
-    model_file = os.path.join(config.PATH_TO_RECORDS,
-                              f"{config.EXPERIMENT.SCENARIO_NAME}_gman_model")
+    model_file = os.path.join(config.PATH_TO_MODEL, f"{config.EXPERIMENT.SCENARIO_NAME}_gman_model")
 
     # load data
     utils.log_string(log, 'loading data...')
-    # (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY, SE,
-    #  mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
     (trainX, trainTE, trainY, traintrafpatY, valX, valTE, valY, valtrafpatY, testX, testTE, testY, testtrafpatY, SE,
      mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
     utils.log_string(log, 'trainX: %s\ttrainY: %s' %

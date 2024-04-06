@@ -133,10 +133,22 @@ def _copy_scenario_files():
 
     scenario_source_folder = \
         os.path.join(os.path.dirname(os.path.dirname(ROOT_DIR)), 'scenario', EXPERIMENT.SCENARIO_FOLDER)
-    scenario_destination_folder = os.path.join(ROOT_DIR, PATH_TO_DATA)
+    scenario_destination_folder = os.path.join(ROOT_DIR, PATH_TO_SCENARIO)
 
     if not os.path.exists(scenario_destination_folder):
         shutil.copytree(scenario_source_folder, scenario_destination_folder)
+
+
+def _copy_data_files(experiment_name=""):
+
+    if not experiment_name:
+        return
+
+    data_source_folder = os.path.join(ROOT_DIR, 'data', experiment_name)
+    data_destination_folder = os.path.join(ROOT_DIR, PATH_TO_DATA)
+
+    if not os.path.exists(data_destination_folder):
+        shutil.copytree(data_source_folder, data_destination_folder)
 
 
 def _load_configs(experiment_config_filepath=None, environment_config_filepath=None, agent_config_filepath=None):
@@ -175,7 +187,7 @@ def _load_scenario_config(scenario_config_filepath=None):
 
     overridable = True if scenario_config_filepath is None else False
 
-    scenario_config_filepath = os.path.join(ROOT_DIR, PATH_TO_DATA, 'simulation', 'scenario_config.json')
+    scenario_config_filepath = os.path.join(ROOT_DIR, PATH_TO_SCENARIO, 'simulation', 'scenario_config.json')
     with open(scenario_config_filepath, 'r') as scenario_config_file:
         config_data = json.load(scenario_config_file)
         _load_config(ScenarioConfig, config_data)
@@ -185,6 +197,10 @@ def _load_scenario_config(scenario_config_filepath=None):
         with open(scenario_config_filepath, 'r') as scenario_config_file:
             config_data = json.load(scenario_config_file)
             _load_config(ScenarioConfig, config_data)
+
+
+def _load_data(experiment_name):
+    _copy_data_files(experiment_name)
 
 
 def _load_config(config_module, config_info):
@@ -258,8 +274,9 @@ AGENT = AgentConfig.get_config(EXPERIMENT.MODEL_NAME)
 ENVIRONMENT = EnvironmentConfig
 SCENARIO = ScenarioConfig
 
-PATH_TO_DATA = os.path.join(
+PATH_TO_SCENARIO = os.path.join(
     "data", EXPERIMENT.SCENARIO_FOLDER, EXPERIMENT.TIME.replace(':', '_'), EXPERIMENT.SCENARIO_FOLDER)
+PATH_TO_DATA = os.path.join('data', EXPERIMENT.NAME)
 PATH_TO_MODEL = os.path.join("model", EXPERIMENT.NAME)
 PATH_TO_RECORDS = os.path.join("records", EXPERIMENT.NAME)
 PATH_TO_METRIC = os.path.join("metric", EXPERIMENT.NAME)
@@ -267,6 +284,7 @@ PATH_TO_SUMMARY = os.path.join("summary", EXPERIMENT.NAME)
 PATH_TO_CONFIG = os.path.join("config", EXPERIMENT.NAME)
 
 _load_scenario_config(scenario_config_filepath=scenario_config_filepath)
+_load_data(experiment_name=EXPERIMENT.COPY_DATA_FROM)
 
 if not EXISTING_EXPERIMENT_FLAG:
     _store_configs()

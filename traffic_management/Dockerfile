@@ -30,12 +30,13 @@ ENV SOURCE_CODE_PATH=/app/src
 ENV SCENARIO_PATH=/app/scenario
 ENV CONFIG_PATH=/app/config
 
+ENV USED_SCENARIO_PATH=/app/output/traffic_management/data
+ENV USED_CONFIG_PATH=/app/output/traffic_management/config
 ENV DATA_PATH=/app/output/traffic_management/data
 ENV MODEL_PATH=/app/output/traffic_management/model
 ENV RECORDS_PATH=/app/output/traffic_management/records
 ENV SUMMARY_PATH=/app/output/traffic_management/summary
 ENV METRIC_PATH=/app/output/traffic_management/metric
-ENV USED_CONFIG_PATH=/app/output/traffic_management/config
 
 ARG USER_ID
 ARG GROUP_ID
@@ -45,19 +46,20 @@ RUN chown -R $USER_ID:$GROUP_ID /app && chmod -R a=rwx /app
 
 USER user
 
-RUN mkdir -p ${DATA_PATH} ${MODEL_PATH} ${RECORDS_PATH} ${SUMMARY_PATH} ${METRIC_PATH} ${USED_CONFIG_PATH}
+RUN mkdir -p ${USED_SCENARIO_PATH} ${USED_CONFIG_PATH} ${DATA_PATH} ${MODEL_PATH} ${RECORDS_PATH} ${SUMMARY_PATH} ${METRIC_PATH}
 
 VOLUME ${SOURCE_CODE_PATH}
 
 VOLUME ${SCENARIO_PATH}
 VOLUME ${CONFIG_PATH}
 
+VOLUME ${USED_SCENARIO_PATH}
+VOLUME ${USED_CONFIG_PATH}
 VOLUME ${DATA_PATH}
 VOLUME ${MODEL_PATH}
 VOLUME ${RECORDS_PATH}
 VOLUME ${SUMMARY_PATH}
 VOLUME ${METRIC_PATH}
-VOLUME ${USED_CONFIG_PATH}
 
 
 ENTRYPOINT ["python3.7"]

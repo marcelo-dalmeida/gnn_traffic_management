@@ -16,12 +16,12 @@ def train():
 
     import config
 
-    dataset_file = os.path.join(config.PATH_TO_RECORDS, 'data', 'dataset.h5')
+    dataset_file = os.path.join(config.PATH_TO_DATA, 'data', 'dataset.h5')
 
-    log_file = os.path.join(config.PATH_TO_RECORDS, f"{config.EXPERIMENT.SCENARIO_NAME}_gman_log")
+    log_file = os.path.join(config.PATH_TO_MODEL, f"{config.EXPERIMENT.SCENARIO_NAME}_gman_log")
     log = open(os.path.join(config.ROOT_DIR, log_file), 'w')
 
-    model_file = os.path.join(config.PATH_TO_RECORDS, f"{config.EXPERIMENT.SCENARIO_NAME}_gman_model")
+    model_file = os.path.join(config.PATH_TO_MODEL, f"{config.EXPERIMENT.SCENARIO_NAME}_gman_model")
 
     # load data
     utils.log_string(log, 'loading data...')

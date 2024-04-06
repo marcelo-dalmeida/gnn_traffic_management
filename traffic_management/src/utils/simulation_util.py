@@ -11,7 +11,7 @@ def generate_simulation_state(time_, env=None):
 
     seconds = datetime_util.convert_human_time_to_seconds(time_)
 
-    path = os.path.join(config.PATH_TO_DATA, 'environment_state')
+    path = os.path.join(config.PATH_TO_SCENARIO, 'environment_state')
 
     environment_state_path = os.path.join(config.ROOT_DIR, path)
 
@@ -58,7 +58,7 @@ def generate_simulation_state(time_, env=None):
         env.step()
         step += 1
 
-    path = os.path.join(config.PATH_TO_DATA, 'environment_state')
+    path = os.path.join(config.PATH_TO_SCENARIO, 'environment_state')
 
     env.save_simulation_state(name=config.EXPERIMENT.SCENARIO_NAME, path=path)
 
@@ -69,7 +69,7 @@ def get_simulation_state_path(time_):
 
     seconds = datetime_util.convert_human_time_to_seconds(time_)
 
-    path = os.path.join(config.PATH_TO_DATA, 'environment_state')
+    path = os.path.join(config.PATH_TO_SCENARIO, 'environment_state')
 
     filename = f'{config.EXPERIMENT.SCENARIO_NAME}_save_state_{seconds}.0.xml'
 
@@ -144,9 +144,9 @@ def generate_filtered_state_files(time_, car_trips_file, bus_trips_file, passeng
 def prepare_warmup():
     simulation_warmup = False
     if config.EXPERIMENT.TIME != "00:00:00":
-        car_flows_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.CAR_TRIPS_FILE)
-        bus_trips_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.BUS_TRIPS_FILE)
-        passenger_trips_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.PASSENGER_TRIPS_FILE)
+        car_flows_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.CAR_TRIPS_FILE)
+        bus_trips_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.BUS_TRIPS_FILE)
+        passenger_trips_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.PASSENGER_TRIPS_FILE)
 
         generate_filtered_state_files(
             config.EXPERIMENT.TIME, car_flows_file, bus_trips_file, passenger_trips_file)

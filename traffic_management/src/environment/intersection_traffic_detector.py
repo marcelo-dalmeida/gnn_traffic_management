@@ -18,7 +18,7 @@ class IntersectionTrafficDetector:
     def __init__(self, intersection_id,
                  evaluate_metrics=False, include_analysis_data=False, execution_name=None):
 
-        net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.NET_FILE)
+        net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.NET_FILE)
         self._net_xml = xml_util.parse_xml(net_file)
 
         self.intersection_id = intersection_id

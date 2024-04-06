@@ -62,7 +62,7 @@ def process_adjacency_graph_file():
 
     def read_graph():
 
-        adj_file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'original_id_adj.txt')
+        adj_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, 'original_id_adj.txt')
 
         with open(adj_file) as handle:
             adjacency_graph_lines = handle.read().splitlines()
@@ -104,12 +104,12 @@ def process_adjacency_graph_file():
             for sk, v in sub_dict.items()
         ]
 
-        file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'Adj.txt')
+        file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, 'Adj.txt')
 
         with open(file, 'w') as handle:
             handle.write('\n'.join(str(line) for line in space_separated_values))
 
-    net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.NET_FILE)
+    net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.NET_FILE)
     net_xml = xml_util.parse_xml(net_file)
 
     original_adjacency_graph = read_graph()
@@ -125,8 +125,8 @@ def process_adjacency_graph_file():
 def generate_static_embedding():
     process_adjacency_graph_file()
 
-    file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'Adj.txt')
-    se_file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'SE.txt')
+    file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, 'Adj.txt')
+    se_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, 'SE.txt')
 
     if Path(se_file).is_file():
         return

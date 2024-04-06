@@ -82,7 +82,7 @@ def loadData(dataset_file, attribute):
     valX = (valX - mean) / std
     testX = (testX - mean) / std
 
-    se_file = os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'SE.txt')
+    se_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, 'SE.txt')
 
     # spatial embedding
     f = open(se_file, mode='r')

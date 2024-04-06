@@ -36,7 +36,7 @@ class ScenarioConfig(Config):
 
         try:
             with open(os.path.join(
-                    config.ROOT_DIR, config.PATH_TO_DATA, ScenarioConfig.MULTI_INTERSECTION_TL_FILE), 'r') as file:
+                    config.ROOT_DIR, config.PATH_TO_SCENARIO, ScenarioConfig.MULTI_INTERSECTION_TL_FILE), 'r') as file:
                 ScenarioConfig.MULTI_INTERSECTION_CONFIG = collections_util.HashableDict(json.load(file))
         except Exception as e:
             warnings.warn("No multi intersection tl file present")

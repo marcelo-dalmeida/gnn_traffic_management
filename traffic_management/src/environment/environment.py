@@ -26,13 +26,13 @@ class Environment:
         self.has_buses = config.SCENARIO.HAS_BUSES
         self.has_passengers = config.SCENARIO.HAS_PASSENGERS
 
-        net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.NET_FILE)
+        net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.NET_FILE)
         self._net_xml = xml_util.parse_xml(net_file)
 
         if self.has_buses:
-            bus_stop_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.BUS_STOPS_FILE)
+            bus_stop_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.BUS_STOPS_FILE)
             self._bus_stop_xml = xml_util.parse_xml(bus_stop_file)
-            bus_trips_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.BUS_TRIPS_FILE)
+            bus_trips_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.BUS_TRIPS_FILE)
             self._bus_trips_xml = xml_util.parse_xml(bus_trips_file)
 
             self._bus_stops = sumo_net_util.get_bus_stop_ids(self._bus_stop_xml)
@@ -40,7 +40,7 @@ class Environment:
 
         if self.has_passengers:
             self._passenger_trips_file = os.path.join(
-                config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.PASSENGER_TRIPS_FILE)
+                config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.PASSENGER_TRIPS_FILE)
             self._passenger_trips_xml = xml_util.parse_xml(self._passenger_trips_file)
 
         self.detector_system = IntersectionTrafficDetectorSystem(
@@ -109,7 +109,7 @@ class Environment:
         if parameters is None:
             parameters = {}
 
-        sumocfg_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.CONFIGURATION_FILE)
+        sumocfg_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.CONFIGURATION_FILE)
         sumo_cmd_str = sumo_util.get_sumo_cmd(sumocfg_file, sumocfg_parameters=parameters, with_gui=with_gui)
 
         sumo_version = traci.start(sumo_cmd_str)

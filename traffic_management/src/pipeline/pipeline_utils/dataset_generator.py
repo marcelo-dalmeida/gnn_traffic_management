@@ -94,7 +94,7 @@ def generate_adjacency_graph(env):
     if Path(file).is_file():
         return
 
-    net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.NET_FILE)
+    net_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.NET_FILE)
     net_xml = xml_util.parse_xml(net_file)
 
     detector_ids = env.detector_system.get_ids()

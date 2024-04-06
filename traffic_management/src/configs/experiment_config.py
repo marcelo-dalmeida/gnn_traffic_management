@@ -18,6 +18,7 @@ class ExperimentConfig(Config):
 
     NAME = ""
     BASELINE = ""
+    COPY_DATA_FROM = ""
 
     DATA_GENERATION_RUN_COUNTS = 3600 * 24
     MODEL_NAME = "Gman"
@@ -26,7 +27,8 @@ class ExperimentConfig(Config):
 
     __MISSING_CONFIG_WARNING_SUPPRESSION = [
         "NAME",
-        "BASELINE"
+        "BASELINE",
+        "COPY_DATA_FROM"
     ]
 
     @classmethod

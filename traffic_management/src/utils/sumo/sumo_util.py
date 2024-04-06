@@ -1536,7 +1536,7 @@ def remap_movements(movements_mapping, movements, connection_id_to_movement, mov
 
 def read_fixed_movement_labels(traffic_light_id, movements, connection_id_to_movement, movement_to_connection_id):
     try:
-        with open(os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, 'simulation',
+        with open(os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, 'simulation',
                                'fixed_movement_labels.json'), 'r') as file:
             movements_mapping = json.load(file)[traffic_light_id]
 
@@ -1566,10 +1566,10 @@ def get_subscription_extension_split_info(subscription_extension):
 
 def setup_bus_lanes(net_xml):
 
-    buslines_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.BUS_LINES_FILE)
+    buslines_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.BUS_LINES_FILE)
     buslines = pd.read_xml(buslines_file)
 
-    buslines_routes_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, config.SCENARIO.BUS_LINES_FILE)
+    buslines_routes_file = os.path.join(config.ROOT_DIR, config.PATH_TO_SCENARIO, config.SCENARIO.BUS_LINES_FILE)
     buslines_routes = pd.read_xml(buslines_routes_file, xpath='//route')
     buslines.loc[:, 'route'] = buslines_routes['edges']
     buslines.loc[:, 'direction'] = buslines['id'].str.split('_').str[-1]
