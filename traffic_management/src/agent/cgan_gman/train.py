@@ -106,13 +106,26 @@ def train():
     sess = tf.compat.v1.Session(config=tf_config)
     sess.run(tf.compat.v1.global_variables_initializer())
 
+    epoch_start = 0
+    if os.path.isfile(os.path.join(config.ROOT_DIR, model_file) + '.meta'):
+        try:
+            with open(os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'epochs.txt'), "r") as file:
+                rounds = file.readlines()
+                epoch_start = int(rounds[-1])
+        except FileNotFoundError:
+            pass
+
+        loader = tf.compat.v1.train.import_meta_graph(
+            os.path.join(config.ROOT_DIR, model_file) + '.meta')
+        loader.restore(sess, os.path.join(config.ROOT_DIR, model_file))
+
     utils.log_string(log, '**** training model ****')
     num_val = valX.shape[0]
     wait = 0
     gen_val_loss_min = np.inf
     disc_val_loss_min = np.inf
 
-    for epoch in range(config.AGENT.MAX_EPOCH):
+    for epoch in range(epoch_start, config.AGENT.MAX_EPOCH):
         if wait >= config.AGENT.PATIENCE:
             utils.log_string(log, 'early stop at epoch: %04d' % (epoch))
             break
@@ -210,6 +223,9 @@ def train():
         disc_val_loss /= num_val
         end_val = time.time()
 
+        with open(os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'epochs.txt'), "a+") as file:
+            file.write(f"{epoch}\n")
+
         utils.log_string(
             log,
             '%s | epoch: %04d/%d, training time: %.1fs, inference time: %.1fs' %
@@ -242,9 +258,9 @@ def train():
     utils.log_string(log, '**** testing model ****')
     utils.log_string(log, 'loading model from %s' %
                      os.path.join(config.ROOT_DIR, model_file))
-    saver = tf.compat.v1.train.import_meta_graph(
+    loader = tf.compat.v1.train.import_meta_graph(
         os.path.join(config.ROOT_DIR, model_file) + '.meta')
-    saver.restore(sess, os.path.join(config.ROOT_DIR, model_file))
+    loader.restore(sess, os.path.join(config.ROOT_DIR, model_file))
     utils.log_string(log, 'model restored!')
     utils.log_string(log, 'evaluating...')
     num_test = testX.shape[0]
