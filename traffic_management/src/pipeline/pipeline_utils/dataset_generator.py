@@ -82,7 +82,7 @@ def generate_dataset():
     path_to_log_file = os.path.join(config.ROOT_DIR, path_to_log, f"detector_logs.h5")
     detector_logs = pd.read_hdf(path_to_log_file, key='data')
 
-    detector_logs = detector_logs.resample('5T', origin='end').mean()
+    detector_logs.iloc[:, :-1] = detector_logs.resample('5T', origin='end').mean()
 
     path_to_dataset_file = os.path.join(config.ROOT_DIR, path_to_log, filename)
     detector_logs.to_hdf(path_to_dataset_file, key='data')

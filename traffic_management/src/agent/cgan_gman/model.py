@@ -14,14 +14,16 @@ def placeholder(P, Q, N):
     TE = tf.compat.v1.placeholder(
         shape=(None, P + Q, 2), dtype=tf.int32, name='TE')
     trafpatY = tf.compat.v1.placeholder(
-        shape=(None, 3), dtype=tf.int32, name='trafpatY')
+        shape=(1), dtype=tf.int32, name='trafpatY')
     genTE = tf.compat.v1.placeholder(
         shape=(None, P + Q, 2), dtype=tf.int32, name='genTE')
     label = tf.compat.v1.placeholder(
         shape=(None, Q, N), dtype=tf.float32, name='label')
+    gen_out = tf.compat.v1.placeholder(
+        shape=(None, Q, N), dtype=tf.float32, name='gen_out')
     is_training = tf.compat.v1.placeholder(
         shape=(), dtype=tf.bool, name='is_training')
-    return X, TE, trafpatY, genTE, label, is_training
+    return X, TE, trafpatY, genTE, label, gen_out, is_training
 
 
 def FC(x, units, activations, bn, bn_decay, is_training, use_bias=True, drop=None):
@@ -356,7 +358,7 @@ def GMAN_gen(X, TE, SE, trafpatY, T, bn, bn_decay, is_training):
     X:       [batch_size, P, N]
     TE:      [batch_size, P + Q, 2] (time-of-day, day-of-week)
     SE:      [N, K * d]
-    trafpatY:labels/conditions [batch_size, C] c = # of classes (3)
+    trafpatY:labels/conditions [C] c = # of classes (3)
     P:       number of history steps
     Q:       number of prediction steps
     T:       one day is divided into T steps
@@ -372,10 +374,6 @@ def GMAN_gen(X, TE, SE, trafpatY, T, bn, bn_decay, is_training):
     K = config.AGENT.NUMBER_OF_ATTENTION_HEADS
     d = config.AGENT.HEAD_ATTENTION_OUTPUT_DIM
 
-    # X = tf.keras.layers.Input(shape=X.shape.as_list()[1:], dtype=X.dtype)
-    # TE = tf.keras.layers.Input(shape=TE.shape.as_list()[1:], dtype=TE.dtype)
-    # trafpatY = tf.keras.layers.Input(shape=trafpatY.shape.as_list(), dtype=trafpatY.dtype)
-
     D = K * d
     # input
     X = tf.expand_dims(X, axis=-1)
@@ -389,7 +387,7 @@ def GMAN_gen(X, TE, SE, trafpatY, T, bn, bn_decay, is_training):
     STE_Q = STE[:, P:]
 
     # trafpat
-    trafpatY = tf.cast(trafpatY, dtype=tf.float32)
+    trafpatY = tf.one_hot(trafpatY, depth=3)
 
     # encoder
     for _ in range(L):
@@ -408,9 +406,6 @@ def GMAN_gen(X, TE, SE, trafpatY, T, bn, bn_decay, is_training):
 
     X = tf.squeeze(X, axis=3)
 
-    # tf.compat.v1.keras.backend.get_session().run(tf.compat.v1.global_variables_initializer())
-    #
-    # return tf.keras.Model(inputs=[X, TE, trafpatY], outputs=X)
     return X
 
 
@@ -437,11 +432,6 @@ def GMAN_disc(X, gen_out, TE, genTE, SE, T, bn, bn_decay, is_training):
     K = config.AGENT.NUMBER_OF_ATTENTION_HEADS
     d = config.AGENT.HEAD_ATTENTION_OUTPUT_DIM
 
-    # X = tf.keras.layers.Input(shape=X.shape.as_list()[1:], dtype=X.dtype)
-    # gen_out = tf.keras.layers.Input(shape=gen_out.shape.as_list()[1:], dtype=gen_out.dtype)
-    # TE = tf.keras.layers.Input(shape=TE.shape.as_list()[1:], dtype=TE.dtype)
-    # genTE = tf.keras.layers.Input(shape=genTE.shape.as_list()[1:], dtype=genTE.dtype)
-
     D = K * d
     # input
     X = tf.expand_dims(X, axis=-1)
@@ -462,15 +452,14 @@ def GMAN_disc(X, gen_out, TE, genTE, SE, T, bn, bn_decay, is_training):
     STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
     genSTE = STEmbedding(SE, genTE, T, D, bn, bn_decay, is_training)
     STE = tf.concat((STE, genSTE), axis=2)  # concat STE
-    STE_P = STE[:, : P]
     STE_Q = STE[:, P:]
 
     # encoder
     for _ in range(L):
-        X = STAttBlock(X, STE_P, K, d, bn, bn_decay, is_training)
+        X = STAttBlock(X, STE_Q, K, d, bn, bn_decay, is_training)
     # transAtt
     X = transformAttention(
-        X, STE_P, STE_Q, K, d, bn, bn_decay, is_training)
+        X, STE_Q, STE_Q, K, d, bn, bn_decay, is_training)
 
     # Reduces to the original input size
     shape = X.get_shape().as_list()
@@ -498,9 +487,6 @@ def GMAN_disc(X, gen_out, TE, genTE, SE, T, bn, bn_decay, is_training):
 
     trafpatY = tf.keras.layers.Dense(3, activation='softmax')(X)
 
-    # tf.compat.v1.keras.backend.get_session().run(tf.compat.v1.global_variables_initializer())
-    #
-    # return tf.keras.Model(inputs=[X, gen_out, TE, genTE], outputs=trafpatY)
     return trafpatY
 
 
@@ -518,7 +504,7 @@ def mae_loss(pred, label):
     return loss
 
 
-def generator_loss(disc_generated_output, gen_output, target):
+def gen_loss(disc_generated_output, gen_output, target):
     gan_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)(tf.ones_like(
         disc_generated_output), disc_generated_output)
 
@@ -527,10 +513,11 @@ def generator_loss(disc_generated_output, gen_output, target):
 
     total_gen_loss = gan_loss + (LAMBDA * l1_loss)
 
-    return total_gen_loss, gan_loss, l1_loss
+    return total_gen_loss
+    #return total_gen_loss, gan_loss, l1_loss
 
 
-def discriminator_loss(disc_real_output, disc_generated_output):
+def disc_loss(disc_real_output, disc_generated_output):
     real_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)(
         tf.ones_like(disc_real_output), disc_real_output)
 

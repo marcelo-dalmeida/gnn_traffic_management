@@ -43,10 +43,17 @@ def seq2instance(data, P, Q):
 
 
 def loadData(dataset_file, attribute):
+
+    traffic_patterns = {
+        'regular': 0,
+        'non-accident anomalous': 1,
+        'accident anomalous': 2
+    }
+
     # Traffic
     df = pd.read_hdf(os.path.join(config.ROOT_DIR, dataset_file), key='data')
 
-    trafpatY = df.loc[:, 'traffic_pattern'].values
+    trafpatY = df.loc[:, 'traffic_pattern'].replace(traffic_patterns).values
 
     df = df.loc[:, attribute]
 
