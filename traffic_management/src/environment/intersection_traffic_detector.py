@@ -134,9 +134,7 @@ class IntersectionTrafficDetector:
     def _register_detectors(self):
         detectors = {}
         for edge_id, value in self._subscription_extension.items():
-            edge = sumo_net_util.get_edge(self._net_xml, edge_id)
-            if edge.get('type') in config.ENVIRONMENT.DETECTOR_ROAD_TYPE:
-                detectors[edge_id] = value
+            detectors[edge_id] = value
 
         return detectors
 
