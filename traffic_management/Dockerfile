@@ -25,17 +25,17 @@ ENV SUMO_HOME=sumo-1.19.0
 RUN mkdir sumo-1.19.0/build/cmake-build && cd sumo-1.19.0/build/cmake-build \
     && cmake ../.. && make -j$(nproc)
 
+ENV SOURCE_CODE_PATH=/app/src
+
 ENV SCENARIO_PATH=/app/scenario
 ENV CONFIG_PATH=/app/config
 
-ENV DATA_PATH=/app/output/data
-ENV MODEL_PATH=/app/output/model
-ENV RECORDS_PATH=/app/output/records
-ENV SUMMARY_PATH=/app/output/summary
-ENV METRIC_PATH=/app/output/metric
-ENV USED_CONFIG_PATH=/app/output/config
-
-COPY --chown=root . /app
+ENV DATA_PATH=/app/output/traffic_management/data
+ENV MODEL_PATH=/app/output/traffic_management/model
+ENV RECORDS_PATH=/app/output/traffic_management/records
+ENV SUMMARY_PATH=/app/output/traffic_management/summary
+ENV METRIC_PATH=/app/output/traffic_management/metric
+ENV USED_CONFIG_PATH=/app/output/traffic_management/config
 
 ARG USER_ID
 ARG GROUP_ID
@@ -44,6 +44,10 @@ RUN addgroup --gid $GROUP_ID user && adduser --disabled-password --gecos '' --ui
 RUN chown -R $USER_ID:$GROUP_ID /app && chmod -R a=rwx /app
 
 USER user
+
+RUN mkdir -p ${DATA_PATH} ${MODEL_PATH} ${RECORDS_PATH} ${SUMMARY_PATH} ${METRIC_PATH} ${USED_CONFIG_PATH}
+
+VOLUME ${SOURCE_CODE_PATH}
 
 VOLUME ${SCENARIO_PATH}
 VOLUME ${CONFIG_PATH}
