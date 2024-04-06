@@ -81,11 +81,6 @@ def train():
     gen_loss = model.gen_loss(disc_pred, gen_pred, label)
     disc_loss = model.disc_loss(disc_pred, disc_pred)
 
-    # tf.compat.v1.add_to_collection('gen_pred', gen_pred)
-    # tf.compat.v1.add_to_collection('gen_loss', gen_loss)
-    # tf.compat.v1.add_to_collection('disc_pred', disc_pred)
-    # tf.compat.v1.add_to_collection('disc_loss', disc_loss)
-
     learning_rate = tf.compat.v1.train.exponential_decay(
         config.AGENT.LEARNING_RATE, global_step,
         decay_steps=config.AGENT.DECAY_EPOCH * num_train // config.AGENT.BATCH_SIZE,
@@ -209,9 +204,6 @@ def train():
             gen_total_loss = sess.run(gen_loss, feed_dict={**gen_feed_dict, **disc_generated_feed_dict})
             disc_total_loss = sess.run(disc_loss, feed_dict=disc_generated_feed_dict)
 
-            # gen_total_loss = model.gen_loss(disc_generated_output, gen_output, valY[start_idx:end_idx])
-            # disc_total_loss = model.disc_loss(disc_real_output, disc_generated_output)
-
             gen_val_loss += gen_total_loss * (end_idx - start_idx)
             disc_val_loss += disc_total_loss * (end_idx - start_idx)
         gen_val_loss /= num_val
@@ -256,7 +248,8 @@ def train():
     utils.log_string(log, 'model restored!')
     utils.log_string(log, 'evaluating...')
     num_test = testX.shape[0]
-    trainPred = []
+    gen_trainPred = []
+    disc_trainPred = []
     num_batch = math.ceil(num_train / config.AGENT.BATCH_SIZE)
     for batch_idx in range(num_batch):
         start_idx = batch_idx * config.AGENT.BATCH_SIZE
@@ -279,9 +272,13 @@ def train():
 
         disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
 
-        trainPred.append(disc_generated_output)
-    trainPred = np.concatenate(trainPred, axis=0)
-    valPred = []
+        gen_trainPred.append(gen_output)
+        disc_trainPred.append(disc_generated_output)
+    gen_trainPred = np.concatenate(gen_trainPred, axis=0)
+    disc_trainPred = np.concatenate(disc_trainPred, axis=0)
+
+    gen_valPred = []
+    disc_valPred = []
     num_batch = math.ceil(num_val / config.AGENT.BATCH_SIZE)
     for batch_idx in range(num_batch):
         start_idx = batch_idx * config.AGENT.BATCH_SIZE
@@ -304,9 +301,13 @@ def train():
 
         disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
 
-        valPred.append(disc_generated_output)
-    valPred = np.concatenate(valPred, axis=0)
-    testPred = []
+        gen_valPred.append(gen_output)
+        disc_valPred.append(disc_generated_output)
+    gen_valPred = np.concatenate(gen_valPred, axis=0)
+    disc_valPred = np.concatenate(disc_valPred, axis=0)
+
+    gen_testPred = []
+    disc_testPred = []
     num_batch = math.ceil(num_test / config.AGENT.BATCH_SIZE)
     start_test = time.time()
     for batch_idx in range(num_batch):
@@ -330,35 +331,67 @@ def train():
 
         disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
 
-        testPred.append(disc_generated_output)
+        gen_testPred.append(gen_output)
+        disc_testPred.append(disc_generated_output)
     end_test = time.time()
-    testPred = np.concatenate(testPred, axis=0)
-    train_mae, train_rmse, train_mape = utils.metric(trainPred, trainY)
-    val_mae, val_rmse, val_mape = utils.metric(valPred, valY)
-    test_mae, test_rmse, test_mape = utils.metric(testPred, testY)
-    utils.log_string(log, 'testing time: %.1fs' % (end_test - start_test))
+    gen_testPred = np.concatenate(gen_testPred, axis=0)
+    disc_testPred = np.concatenate(disc_testPred, axis=0)
+
+    # summary
+    gen_train_mae, gen_train_rmse, gen_train_mape = utils.metric(gen_trainPred, trainY)
+    gen_val_mae, gen_val_rmse, gen_val_mape = utils.metric(gen_valPred, valY)
+    gen_test_mae, gen_test_rmse, gen_test_mape = utils.metric(gen_testPred, testY)
+    utils.log_string(log, 'gen testing time: %.1fs' % (end_test - start_test))
     utils.log_string(log, '                MAE\t\tRMSE\t\tMAPE')
-    utils.log_string(log, 'train            %.2f\t\t%.2f\t\t%.2f%%' %
-                     (train_mae, train_rmse, train_mape * 100))
-    utils.log_string(log, 'val              %.2f\t\t%.2f\t\t%.2f%%' %
-                     (val_mae, val_rmse, val_mape * 100))
-    utils.log_string(log, 'test             %.2f\t\t%.2f\t\t%.2f%%' %
-                     (test_mae, test_rmse, test_mape * 100))
+    utils.log_string(log, 'gen train            %.2f\t\t%.2f\t\t%.2f%%' %
+                     (gen_train_mae, gen_train_rmse, gen_train_mape * 100))
+    utils.log_string(log, 'gen val              %.2f\t\t%.2f\t\t%.2f%%' %
+                     (gen_val_mae, gen_val_rmse, gen_val_mape * 100))
+    utils.log_string(log, 'gen test             %.2f\t\t%.2f\t\t%.2f%%' %
+                     (gen_test_mae, gen_test_rmse, gen_test_mape * 100))
     utils.log_string(log, 'performance in each prediction step')
-    MAE, RMSE, MAPE = [], [], []
+    gen_MAE, gen_RMSE, gen_MAPE = [], [], []
     for q in range(config.AGENT.PREDICTION_STEPS):
-        mae, rmse, mape = utils.metric(testPred[:, q], testY[:, q])
-        MAE.append(mae)
-        RMSE.append(rmse)
-        MAPE.append(mape)
-        utils.log_string(log, 'step: %02d         %.2f\t\t%.2f\t\t%.2f%%' %
-                         (q + 1, mae, rmse, mape * 100))
-    average_mae = np.mean(MAE)
-    average_rmse = np.mean(RMSE)
-    average_mape = np.mean(MAPE)
+        gen_mae, gen_rmse, gen_mape = utils.metric(gen_testPred[:, q], testY[:, q])
+        gen_MAE.append(gen_mae)
+        gen_RMSE.append(gen_rmse)
+        gen_MAPE.append(gen_mape)
+        utils.log_string(log, 'gen step: %02d         %.2f\t\t%.2f\t\t%.2f%%' %
+                         (q + 1, gen_mae, gen_rmse, gen_mape * 100))
+    gen_average_mae = np.mean(gen_MAE)
+    gen_average_rmse = np.mean(gen_RMSE)
+    gen_average_mape = np.mean(gen_MAPE)
     utils.log_string(
-        log, 'average:         %.2f\t\t%.2f\t\t%.2f%%' %
-             (average_mae, average_rmse, average_mape * 100))
+        log, 'gen average:         %.2f\t\t%.2f\t\t%.2f%%' %
+             (gen_average_mae, gen_average_rmse, gen_average_mape * 100))
+
+    disc_train_mae, disc_train_rmse, disc_train_mape = utils.metric(disc_trainPred, traintrafpatY)
+    disc_val_mae, disc_val_rmse, disc_val_mape = utils.metric(disc_valPred, valtrafpatY)
+    disc_test_mae, disc_test_rmse, disc_test_mape = utils.metric(disc_testPred, testtrafpatY)
+    utils.log_string(log, 'disc testing time: %.1fs' % (end_test - start_test))
+    utils.log_string(log, '                MAE\t\tRMSE\t\tMAPE')
+    utils.log_string(log, 'disc train            %.2f\t\t%.2f\t\t%.2f%%' %
+                     (disc_train_mae, disc_train_rmse, disc_train_mape * 100))
+    utils.log_string(log, 'disc val              %.2f\t\t%.2f\t\t%.2f%%' %
+                     (disc_val_mae, disc_val_rmse, disc_val_mape * 100))
+    utils.log_string(log, 'disc test             %.2f\t\t%.2f\t\t%.2f%%' %
+                     (disc_test_mae, disc_test_rmse, disc_test_mape * 100))
+    utils.log_string(log, 'disc performance in each prediction step')
+    disc_MAE, disc_RMSE, disc_MAPE = [], [], []
+    for q in range(config.AGENT.PREDICTION_STEPS):
+        disc_mae, disc_rmse, disc_mape = utils.metric(disc_testPred[:, q], testtrafpatY[:, q])
+        disc_MAE.append(disc_mae)
+        disc_RMSE.append(disc_rmse)
+        disc_MAPE.append(disc_mape)
+        utils.log_string(log, 'disc step: %02d         %.2f\t\t%.2f\t\t%.2f%%' %
+                         (q + 1, disc_mae, disc_rmse, disc_mape * 100))
+    disc_average_mae = np.mean(disc_MAE)
+    disc_average_rmse = np.mean(disc_RMSE)
+    disc_average_mape = np.mean(disc_MAPE)
+    utils.log_string(
+        log, 'disc average:         %.2f\t\t%.2f\t\t%.2f%%' %
+             (disc_average_mae, disc_average_rmse, disc_average_mape * 100))
+
     end = time.time()
     utils.log_string(log, 'total time: %.1fmin' % ((end - start) / 60))
     sess.close()
