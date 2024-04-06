@@ -1,9 +1,10 @@
 # jetbrains configuration
 .idea
 
-/output/model
-/output/records
-/output/summary
-/output/metric
-/output/config
+/output/traffic_management/data
+/output/traffic_management/model
+/output/traffic_management/records
+/output/traffic_management/summary
+/output/traffic_management/metric
+/output/traffic_management/config
 /config
