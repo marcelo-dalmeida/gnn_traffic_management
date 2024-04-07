@@ -108,12 +108,17 @@ def train():
     sess = tf.compat.v1.Session(config=tf_config)
     sess.run(tf.compat.v1.global_variables_initializer())
 
+    special_epoch_status = None
     epoch_start = 0
     if os.path.isfile(os.path.join(config.ROOT_DIR, model_file) + '.meta'):
         try:
             with open(os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'epochs.txt'), "r") as file:
                 rounds = file.readlines()
-                epoch_start = int(rounds[-1]) + 1
+                try:
+                    epoch_start = int(rounds[-1]) + 1
+                except ValueError:
+                    special_epoch_status = rounds[-1]
+
         except FileNotFoundError:
             pass
 
@@ -129,8 +134,15 @@ def train():
     disc_val_loss_min = np.inf
 
     for epoch in range(epoch_start, config.AGENT.MAX_EPOCH):
+
+        if special_epoch_status == 'early_stop':
+            utils.log_string(log, 'Stopping training of an early stopped model')
+            break
+
         if wait >= config.AGENT.PATIENCE:
             utils.log_string(log, 'early stop at epoch: %04d' % (epoch))
+            with open(os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'epochs.txt'), "a+") as file:
+                file.write(f"early_stop\n")
             break
         # shuffle
         permutation = np.random.permutation(num_train)
