@@ -111,7 +111,7 @@ def train():
         try:
             with open(os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'epochs.txt'), "r") as file:
                 rounds = file.readlines()
-                epoch_start = int(rounds[-1])
+                epoch_start = int(rounds[-1]) + 1
         except FileNotFoundError:
             pass
 
