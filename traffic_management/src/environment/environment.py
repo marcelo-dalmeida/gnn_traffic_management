@@ -67,7 +67,7 @@ class Environment:
     def simulation_warmup(self, value):
         self._simulation_warmup = value
 
-    def setup(self, evaluate_metrics=True, include_analysis_data=False, path_to_log=None, *args, **kwargs):
+    def setup(self, evaluate_metrics=True, include_analysis_data=False, *args, **kwargs):
 
         self._data_subscription = SimulationDataSubscriber()
         self.__update_subscription_features(evaluate_metrics)
@@ -75,8 +75,7 @@ class Environment:
         self.__setup(evaluate_metrics, include_analysis_data, *args, **kwargs)
 
         self.detector_system.setup(
-            self._data_subscription, evaluate_metrics=evaluate_metrics, include_analysis_data=include_analysis_data,
-            path_to_log=path_to_log)
+            self._data_subscription, evaluate_metrics=evaluate_metrics, include_analysis_data=include_analysis_data)
 
     def __setup(self, evaluate_metrics=True, include_analysis_data=False, *args, **kwargs):
 

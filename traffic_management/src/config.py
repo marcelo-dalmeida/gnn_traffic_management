@@ -276,7 +276,7 @@ SCENARIO = ScenarioConfig
 
 PATH_TO_SCENARIO = os.path.join(
     "data", EXPERIMENT.SCENARIO_FOLDER, EXPERIMENT.TIME.replace(':', '_'), EXPERIMENT.SCENARIO_FOLDER)
-PATH_TO_DATA = os.path.join('data', EXPERIMENT.NAME)
+PATH_TO_DATA = os.path.join("data", EXPERIMENT.NAME)
 PATH_TO_MODEL = os.path.join("model", EXPERIMENT.NAME)
 PATH_TO_RECORDS = os.path.join("records", EXPERIMENT.NAME)
 PATH_TO_METRIC = os.path.join("metric", EXPERIMENT.NAME)

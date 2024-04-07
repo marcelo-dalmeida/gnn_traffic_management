@@ -12,7 +12,7 @@ def test():
 
     import config
 
-    dataset_file = os.path.join(config.PATH_TO_DATA, 'data', 'dataset.h5')
+    dataset_file = os.path.join(config.PATH_TO_DATA, 'dataset.h5')
 
     start = time.time()
 

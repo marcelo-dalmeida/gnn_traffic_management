@@ -47,21 +47,17 @@ class IntersectionTrafficDetectorSystem:
 
         self._simulation_warmup = value
 
-    def setup(self, data_subscription, evaluate_metrics=False, include_analysis_data=False, path_to_log=None):
+    def setup(self, data_subscription, evaluate_metrics=False, include_analysis_data=False):
 
         self._data_subscription = data_subscription
         self.update_subscription_features()
-
-        self.path_to_log = path_to_log
-        if self.path_to_log:
-            Path(os.path.join(config.ROOT_DIR, self.path_to_log)).mkdir(parents=True, exist_ok=True)
 
         self.__setup(evaluate_metrics, include_analysis_data)
 
         for intersection_id, detector in self._traffic_detectors.items():
             detector.setup(data_subscription, evaluate_metrics, include_analysis_data)
 
-    def __setup(self, evaluate_metrics=False, include_analysis_data=False, path_to_log=None):
+    def __setup(self, evaluate_metrics=False, include_analysis_data=False):
 
         self.do_evaluate_metrics = evaluate_metrics
         self.do_include_analysis_data = include_analysis_data
@@ -148,7 +144,7 @@ class IntersectionTrafficDetectorSystem:
 
         log_df['traffic_pattern'] = 'regular'
 
-        path_to_log_file = os.path.join(config.ROOT_DIR, self.path_to_log, f"detector_logs.h5")
+        path_to_log_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, f"detector_logs.h5")
         log_df.to_hdf(path_to_log_file, key='data')
 
         for _, detector in self._traffic_detectors.items():

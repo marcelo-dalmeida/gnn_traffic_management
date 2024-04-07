@@ -12,12 +12,10 @@ from utils.sumo import sumo_net_util
 
 def run_simulation(env, simulation_warmup=False):
 
-    path_to_log = os.path.join(config.PATH_TO_RECORDS, "data")
-
-    if Path(os.path.join(config.ROOT_DIR, path_to_log, f"detector_logs.h5")).is_file():
+    if Path(os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, f"detector_logs.h5")).is_file():
         return
 
-    env.setup(mode='test', path_to_log=path_to_log)
+    env.setup(mode='test')
 
     execution_name = 'dataset_generation'
     env.reset(execution_name)
@@ -73,18 +71,15 @@ def run_simulation(env, simulation_warmup=False):
 def generate_dataset():
 
     filename = "dataset.h5"
-
-    path_to_log = os.path.join(config.PATH_TO_RECORDS, "data")
-
-    if Path(os.path.join(config.ROOT_DIR, path_to_log, filename)).is_file():
+    if Path(os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, filename)).is_file():
         return
 
-    path_to_log_file = os.path.join(config.ROOT_DIR, path_to_log, f"detector_logs.h5")
+    path_to_log_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, f"detector_logs.h5")
     detector_logs = pd.read_hdf(path_to_log_file, key='data')
 
     detector_logs.iloc[:, :-1] = detector_logs.resample('5T', origin='end').mean()
 
-    path_to_dataset_file = os.path.join(config.ROOT_DIR, path_to_log, filename)
+    path_to_dataset_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, filename)
     detector_logs.to_hdf(path_to_dataset_file, key='data')
 
 
