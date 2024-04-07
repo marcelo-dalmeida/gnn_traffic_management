@@ -26,12 +26,9 @@ def train():
     utils.log_string(log, 'loading data...')
     (trainX, trainTE, trainY, traintrafpatY, valX, valTE, valY, valtrafpatY, testX, testTE, testY, testtrafpatY, SE,
      mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
-    utils.log_string(log, 'trainX: %s\ttrainY: %s' %
-                     (trainX.shape, trainY.shape))
-    utils.log_string(log, 'valX:   %s\t\tvalY:   %s' %
-                     (valX.shape, valY.shape))
-    utils.log_string(log, 'testX:  %s\t\ttestY:  %s' %
-                     (testX.shape, testY.shape))
+    utils.log_string(log, 'trainX: %s\ttrainY: %s' % (trainX.shape, trainY.shape))
+    utils.log_string(log, 'valX:   %s\t\tvalY:   %s' % (valX.shape, valY.shape))
+    utils.log_string(log, 'testX:  %s\t\ttestY:  %s' % (testX.shape, testY.shape))
     utils.log_string(log, 'data loaded!')
 
     # train model
@@ -81,6 +78,11 @@ def train():
     gen_loss = model.gen_loss(disc_pred, gen_pred, label)
     disc_loss = model.disc_loss(disc_pred, disc_pred)
 
+    tf.compat.v1.add_to_collection('gen_pred', gen_pred)
+    tf.compat.v1.add_to_collection('gen_loss', gen_loss)
+    tf.compat.v1.add_to_collection('disc_pred', disc_pred)
+    tf.compat.v1.add_to_collection('disc_loss', disc_loss)
+
     learning_rate = tf.compat.v1.train.exponential_decay(
         config.AGENT.LEARNING_RATE, global_step,
         decay_steps=config.AGENT.DECAY_EPOCH * num_train // config.AGENT.BATCH_SIZE,
@@ -118,6 +120,7 @@ def train():
         loader = tf.compat.v1.train.import_meta_graph(
             os.path.join(config.ROOT_DIR, model_file) + '.meta')
         loader.restore(sess, os.path.join(config.ROOT_DIR, model_file))
+        utils.log_string(log, 'model restored!')
 
     utils.log_string(log, '**** training model ****')
     num_val = valX.shape[0]
@@ -202,7 +205,8 @@ def train():
                 TE: valTE[start_idx:end_idx],
                 trafpatY: valtrafpatY[start_idx:end_idx],
                 label: valY[start_idx:end_idx],
-                is_training: False}
+                is_training: False
+            }
 
             gen_output = sess.run(gen_pred, feed_dict=gen_feed_dict)
 
@@ -212,7 +216,8 @@ def train():
                 TE: valTE[start_idx:end_idx],
                 genTE: valTE[start_idx:end_idx],
                 trafpatY: valtrafpatY[start_idx:end_idx],
-                is_training: False}
+                is_training: False
+            }
 
             gen_total_loss = sess.run(gen_loss, feed_dict={**gen_feed_dict, **disc_generated_feed_dict})
             disc_total_loss = sess.run(disc_loss, feed_dict=disc_generated_feed_dict)
@@ -256,12 +261,11 @@ def train():
 
     # test model
     utils.log_string(log, '**** testing model ****')
-    utils.log_string(log, 'loading model from %s' %
-                     os.path.join(config.ROOT_DIR, model_file))
-    loader = tf.compat.v1.train.import_meta_graph(
-        os.path.join(config.ROOT_DIR, model_file) + '.meta')
+    utils.log_string(log, 'loading model from %s' % os.path.join(config.ROOT_DIR, model_file))
+    loader = tf.compat.v1.train.import_meta_graph(os.path.join(config.ROOT_DIR, model_file) + '.meta')
     loader.restore(sess, os.path.join(config.ROOT_DIR, model_file))
     utils.log_string(log, 'model restored!')
+
     utils.log_string(log, 'evaluating...')
     num_test = testX.shape[0]
     gen_trainPred = []
@@ -275,7 +279,8 @@ def train():
             X: trainX[start_idx:end_idx],
             TE: trainTE[start_idx:end_idx],
             trafpatY: traintrafpatY[start_idx:end_idx],
-            is_training: False}
+            is_training: False
+        }
 
         gen_output = sess.run(gen_pred, feed_dict=gen_feed_dict)
 
@@ -284,7 +289,8 @@ def train():
             gen_out: gen_output,
             TE: trainTE[start_idx:end_idx],
             genTE: trainTE[start_idx:end_idx],
-            is_training: False}
+            is_training: False
+        }
 
         disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
 
@@ -304,7 +310,8 @@ def train():
             X: valX[start_idx:end_idx],
             TE: valTE[start_idx:end_idx],
             trafpatY: valtrafpatY[start_idx:end_idx],
-            is_training: False}
+            is_training: False
+        }
 
         gen_output = sess.run(gen_pred, feed_dict=gen_feed_dict)
 
@@ -313,7 +320,8 @@ def train():
             gen_out: gen_output,
             TE: valTE[start_idx:end_idx],
             genTE: valTE[start_idx:end_idx],
-            is_training: False}
+            is_training: False
+        }
 
         disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
 
@@ -334,7 +342,8 @@ def train():
             X: testX[start_idx:end_idx],
             TE: testTE[start_idx:end_idx],
             trafpatY: testtrafpatY[start_idx:end_idx],
-            is_training: False}
+            is_training: False
+        }
 
         gen_output = sess.run(gen_pred, feed_dict=gen_feed_dict)
 
@@ -343,7 +352,8 @@ def train():
             gen_out: gen_output,
             TE: testTE[start_idx:end_idx],
             genTE: testTE[start_idx:end_idx],
-            is_training: False}
+            is_training: False
+        }
 
         disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
 
