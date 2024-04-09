@@ -129,6 +129,14 @@ def _set_experiment_name(experiment_name):
     scenario_config_filepath = os.path.join(ROOT_DIR, path_to_config, 'scenario_config.json')
 
 
+def _create_folders():
+    records_path = os.path.join(ROOT_DIR, PATH_TO_RECORDS)
+    Path(records_path).mkdir(parents=True, exist_ok=True)
+
+    model_path = os.path.join(ROOT_DIR, PATH_TO_MODEL)
+    Path(model_path).mkdir(parents=True, exist_ok=True)
+
+
 def _copy_scenario_files():
 
     scenario_source_folder = \
@@ -282,6 +290,8 @@ PATH_TO_RECORDS = os.path.join("records", EXPERIMENT.NAME)
 PATH_TO_METRIC = os.path.join("metric", EXPERIMENT.NAME)
 PATH_TO_SUMMARY = os.path.join("summary", EXPERIMENT.NAME)
 PATH_TO_CONFIG = os.path.join("config", EXPERIMENT.NAME)
+
+_create_folders()
 
 _load_scenario_config(scenario_config_filepath=scenario_config_filepath)
 _load_data(experiment_name=EXPERIMENT.COPY_DATA_FROM)
