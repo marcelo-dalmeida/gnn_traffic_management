@@ -69,6 +69,16 @@ class SimulationDataSubscriber:
 
         self._subscription_functions[type_](ids_, variables)
 
+    def unsubscribe(self, type_, ids_=None):
+
+        if not isinstance(ids_, (list, tuple)):
+            ids_ = [ids_]
+
+        if len(ids_) == 0:
+            return
+
+        self._unsubscription_functions[type_](ids_)
+
     def get_subscription_results(self, type_, ids=None):
 
         single_output = False
@@ -147,6 +157,20 @@ class SimulationDataSubscriber:
                 self._traci.simulation.subscribe(variables),
             TRAFFIC_LIGHT: lambda ids, variables:
                 consume(map(lambda id_: self._traci.trafficlight.subscribe(id_, variables), ids))
+        }
+        self._unsubscription_functions = {
+            PERSON: lambda ids:
+                consume(map(lambda id_: self._traci.person.unsubscribe(id_), ids)),
+            EDGE: lambda ids:
+                consume(map(lambda id_: self._traci.edge.unsubscribe(id_), ids)),
+            LANE: lambda ids:
+                consume(map(lambda id_: self._traci.lane.unsubscribe(id_), ids)),
+            VEHICLE: lambda ids:
+                consume(map(lambda id_: self._traci.vehicle.unsubscribe(id_), ids)),
+            SIMULATION: lambda ids:
+                self._traci.simulation.unsubscribe(),
+            TRAFFIC_LIGHT: lambda ids:
+                consume(map(lambda id_: self._traci.trafficlight.unsubscribe(id_), ids))
         }
         self._subscription_functions.update({
             BUS_SPECIFIC: self._subscription_functions[VEHICLE],

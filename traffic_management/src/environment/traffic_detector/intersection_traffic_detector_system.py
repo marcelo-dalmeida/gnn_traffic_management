@@ -1,9 +1,4 @@
-import collections
 import os
-import json
-import pickle
-
-import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -11,8 +6,8 @@ import traci.constants as tc
 
 import config
 from environment.simulation_data_subscriber import VEHICLE, EDGE
-from environment.intersection_traffic_detector import IntersectionTrafficDetector
-from utils import xml_util, collections_util
+from environment.traffic_detector.intersection_traffic_detector import IntersectionTrafficDetector
+from utils import xml_util
 from utils.sumo import sumo_net_util
 
 
@@ -144,8 +139,9 @@ class IntersectionTrafficDetectorSystem:
 
         log_df['traffic_pattern'] = 'regular'
 
-        path_to_log_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, f"detector_logs.h5")
-        log_df.to_hdf(path_to_log_file, key='data')
+        path_to_log_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA)
+        Path(path_to_log_file).mkdir(parents=True, exist_ok=True)
+        log_df.to_hdf(os.path.join(path_to_log_file, f"detector_logs.h5"), key='data')
 
         for _, detector in self._traffic_detectors.items():
             detector._detector_logs = []

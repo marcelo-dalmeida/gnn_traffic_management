@@ -1,7 +1,8 @@
 import os
 
 import config
-from environment.intersection_traffic_detector_system import IntersectionTrafficDetectorSystem
+from environment.accident_generation.accident_generation_system import AccidentGenerationSystem
+from environment.traffic_detector.intersection_traffic_detector_system import IntersectionTrafficDetectorSystem
 from environment.simulation_data_subscriber import SimulationDataSubscriber, PERSON, EDGE, LANE, \
     VEHICLE, SIMULATION
 
@@ -46,6 +47,8 @@ class Environment:
         self.detector_system = IntersectionTrafficDetectorSystem(
             evaluate_metrics=evaluate_metrics, include_analysis_data=include_analysis_data)
 
+        self.accident_generation_system = AccidentGenerationSystem()
+
         # network attributes
         self._edges = (
                 list(sumo_net_util.get_edge_map(self._net_xml).keys()) +
@@ -77,6 +80,8 @@ class Environment:
         self.detector_system.setup(
             self._data_subscription, evaluate_metrics=evaluate_metrics, include_analysis_data=include_analysis_data)
 
+        self.accident_generation_system.setup(self._data_subscription)
+
     def __setup(self, evaluate_metrics=True, include_analysis_data=False, *args, **kwargs):
 
         self.do_include_analysis_data = include_analysis_data
@@ -102,6 +107,7 @@ class Environment:
         self.step_ = 0
 
         self.detector_system.reset(execution_name)
+        self.accident_generation_system.reset(execution_name)
 
     def start(self, parameters=None, with_gui=False):
 
@@ -117,6 +123,7 @@ class Environment:
         self._start_up()
 
         self.detector_system.start()
+        self.accident_generation_system.start()
 
     def _start_up(self):
 
@@ -140,6 +147,7 @@ class Environment:
         self._update_data_subscriptions()
 
         self.detector_system.step_environment()
+        self.accident_generation_system.step_environment()
 
         return self.step_, tuple()
 

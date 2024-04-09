@@ -15,4 +15,24 @@ class EnvironmentConfig(Config):
         "highway.tertiary_link",
         "highway.residential"
     ]
+    ACCIDENT_GEN_FAILED_TRIES = 10
+    ACCIDENT_GEN_WARMUP = 1800
+    ACCIDENT_GEN_COOLDOWN = 1800
+    ACCIDENT_GEN_ROAD_TYPE_PROB = [
+        (0.45, ("highway.primary", "highway.primary_link",)),
+        (0.30, ("highway.secondary", "highway.secondary_link",)),
+        (0.20, ("highway.tertiary", "highway.tertiary_link",)),
+        (0.05, ("highway.residential",))
+    ]
+    ACCIDENT_GEN_DURATION_PROB = [
+        (0.20, 30),
+        (0.40, 60),
+        (0.30, 90),
+        (0.10, 120)
+    ]
+    ACCIDENT_GEN_LANES_BLOCKED_PROB = [
+        (0.40, 1),
+        (0.60, 2)
+    ]
+
 

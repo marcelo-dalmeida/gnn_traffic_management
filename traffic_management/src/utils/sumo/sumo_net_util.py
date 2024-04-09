@@ -553,6 +553,14 @@ def get_edge_adjacent_intersections_mapping(net_xml, multi_intersection_config=N
     return edge_to_previous_intersection_mapping, edge_to_next_intersection_mapping
 
 
+@lru_cache(maxsize=None)
+def get_edges_by_road_type(net_xml):
+    road_type_map = collections.defaultdict(list)
+    for edge_id, edge in get_edge_map(net_xml).items():
+        road_type_map[edge.get('type')].append(edge_id)
+    return road_type_map
+
+
 def get_connection_map(net_xml, type_=REGULAR_MAP):
 
     return_type_dict = _get_connection_map(net_xml)
