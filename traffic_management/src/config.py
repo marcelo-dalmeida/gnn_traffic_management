@@ -132,7 +132,7 @@ def _set_experiment_name(experiment_name):
 def _copy_scenario_files():
 
     scenario_source_folder = \
-        os.path.join(os.path.dirname(os.path.dirname(ROOT_DIR)), 'scenario', EXPERIMENT.SCENARIO_FOLDER)
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(ROOT_DIR))), 'scenario', EXPERIMENT.SCENARIO_FOLDER)
     scenario_destination_folder = os.path.join(ROOT_DIR, PATH_TO_SCENARIO)
 
     if not os.path.exists(scenario_destination_folder):
