@@ -45,11 +45,10 @@ class AccidentGenerationSystem:
     def update_subscription_features(self):
 
         self._data_subscription.update_subscription_variables(
-            EDGE, self._EDGE_VARIABLES_TO_SUBSCRIBE)
-        self._data_subscription.update_subscription_variables(
-            LANE, self._LANE_VARIABLES_TO_SUBSCRIBE)
-        self._data_subscription.update_subscription_variables(
-            VEHICLE, self._VEHICLE_VARIABLES_TO_SUBSCRIBE)
+            (EDGE, self._EDGE_VARIABLES_TO_SUBSCRIBE),
+            (LANE, self._LANE_VARIABLES_TO_SUBSCRIBE),
+            (VEHICLE, self._VEHICLE_VARIABLES_TO_SUBSCRIBE)
+        )
 
     def reset(self, execution_name):
 

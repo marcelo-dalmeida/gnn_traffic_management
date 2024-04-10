@@ -52,32 +52,35 @@ class SimulationDataSubscriber:
 
         self.clear_subscriptions()
 
-    def update_subscription_variables(self, type_, variables):
-        self._variables_to_subscribe[type_].update(variables)
+    def update_subscription_variables(self, *args):
+        # args = (type, variables)
 
-    def subscribe(self, type_, ids_=None):
+        for type_, variables in args:
+            self._variables_to_subscribe[type_].update(variables)
+
+    def subscribe(self, type_, ids=None):
 
         variables = list(self._variables_to_subscribe[type_])
         if not variables:
             return
 
-        if not isinstance(ids_, (list, tuple)):
-            ids_ = [ids_]
+        if not isinstance(ids, (list, tuple)):
+            ids = [ids]
 
-        if len(ids_) == 0:
+        if len(ids) == 0:
             return
 
-        self._subscription_functions[type_](ids_, variables)
+        self._subscription_functions[type_](ids, variables)
 
-    def unsubscribe(self, type_, ids_=None):
+    def unsubscribe(self, type_, ids=None):
 
-        if not isinstance(ids_, (list, tuple)):
-            ids_ = [ids_]
+        if not isinstance(ids, (list, tuple)):
+            ids = [ids]
 
-        if len(ids_) == 0:
+        if len(ids) == 0:
             return
 
-        self._unsubscription_functions[type_](ids_)
+        self._unsubscription_functions[type_](ids)
 
     def get_subscription_results(self, type_, ids=None):
 

@@ -92,7 +92,8 @@ class Environment:
     def __update_subscription_features(self, evaluate_metrics):
 
         self._data_subscription.update_subscription_variables(
-            SIMULATION, self._SIMULATION_VARIABLES_TO_SUBSCRIBE)
+            (SIMULATION, self._SIMULATION_VARIABLES_TO_SUBSCRIBE)
+        )
 
     def reset(self, execution_name=None):
         try:
