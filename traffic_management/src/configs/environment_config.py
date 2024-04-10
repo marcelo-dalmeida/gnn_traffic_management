@@ -34,5 +34,13 @@ class EnvironmentConfig(Config):
         (0.40, 1),
         (0.60, 2)
     ]
-
-
+    SLOW_DOWN_GEN_WARMUP = 60                                      # -1 deactivates slow down generation
+    SLOW_DOWN_GEN_COOLDOWN = 10
+    SLOW_DOWN_GEN_VEHICLE_PERCENTAGE = 0.01
+    SLOW_DOWN_GEN_DURATION_PROB = [
+        (0.20, 1),
+        (0.20, 2),
+        (0.20, 3),
+        (0.20, 4),
+        (0.20, 5)
+    ]

@@ -1,7 +1,7 @@
 import os
 
 import config
-from environment.accident_generation.accident_generation_system import AccidentGenerationSystem
+from environment.traffic_pattern_generation.accident_generation_system import AccidentGenerationSystem
 from environment.traffic_detector.intersection_traffic_detector_system import IntersectionTrafficDetectorSystem
 from environment.simulation_data_subscriber import SimulationDataSubscriber, PERSON, EDGE, LANE, \
     VEHICLE, SIMULATION
@@ -9,6 +9,7 @@ from environment.simulation_data_subscriber import SimulationDataSubscriber, PER
 import traci
 import traci.constants as tc
 
+from environment.traffic_pattern_generation.slow_down_generation_system import SlowDownGenerationSystem
 from utils import xml_util
 from utils.sumo import sumo_traci_util, sumo_util, sumo_net_util
 
@@ -48,6 +49,7 @@ class Environment:
             evaluate_metrics=evaluate_metrics, include_analysis_data=include_analysis_data)
 
         self.accident_generation_system = AccidentGenerationSystem()
+        self.slow_down_generation_system = SlowDownGenerationSystem()
 
         # network attributes
         self._edges = (
@@ -81,6 +83,7 @@ class Environment:
             self._data_subscription, evaluate_metrics=evaluate_metrics, include_analysis_data=include_analysis_data)
 
         self.accident_generation_system.setup(self._data_subscription)
+        self.slow_down_generation_system.setup(self._data_subscription)
 
     def __setup(self, evaluate_metrics=True, include_analysis_data=False, *args, **kwargs):
 
@@ -108,6 +111,7 @@ class Environment:
 
         self.detector_system.reset(execution_name)
         self.accident_generation_system.reset(execution_name)
+        self.slow_down_generation_system.reset(execution_name)
 
     def start(self, parameters=None, with_gui=False):
 
@@ -124,6 +128,7 @@ class Environment:
 
         self.detector_system.start()
         self.accident_generation_system.start()
+        self.slow_down_generation_system.start()
 
     def _start_up(self):
 
@@ -148,6 +153,7 @@ class Environment:
 
         self.detector_system.step_environment()
         self.accident_generation_system.step_environment()
+        self.slow_down_generation_system.step_environment()
 
         return self.step_, tuple()
 

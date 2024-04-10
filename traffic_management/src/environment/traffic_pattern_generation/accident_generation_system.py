@@ -4,7 +4,7 @@ import random
 import traci.constants as tc
 
 import config
-from environment.accident_generation.accident import Accident
+from environment.traffic_pattern_generation.accident import Accident
 from environment.simulation_data_subscriber import EDGE, SIMULATION, VEHICLE, LANE
 from utils import xml_util
 from utils.sumo import sumo_net_util
