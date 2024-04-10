@@ -1,6 +1,6 @@
 {
     "DETECTOR_EXTENSION": 100,
-    "USE_GUI": true,
+    "USE_GUI": false,
     "DEBUG": false,
     "DETECTOR_ROAD_TYPE": [
         "highway.primary",
