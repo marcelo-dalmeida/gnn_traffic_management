@@ -71,8 +71,9 @@ class AccidentGenerationSystem:
         for accident_id in remove_accidents:
             self.accidents.pop(accident_id)
 
-        self._accident_gen_cooldown -= 1
-        if self._accident_gen_cooldown <= 0:
+        if self._accident_gen_cooldown > 0:
+            self._accident_gen_cooldown -= 1
+        if self._accident_gen_cooldown == 0:
             self.generate_accident()
             self._accident_gen_cooldown = config.ENVIRONMENT.ACCIDENT_GEN_COOLDOWN
 

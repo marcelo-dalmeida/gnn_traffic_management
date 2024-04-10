@@ -16,7 +16,7 @@ class EnvironmentConfig(Config):
         "highway.residential"
     ]
     ACCIDENT_GEN_FAILED_TRIES = 10
-    ACCIDENT_GEN_WARMUP = 1800
+    ACCIDENT_GEN_WARMUP = 1800                                      # -1 deactivates accident generation
     ACCIDENT_GEN_COOLDOWN = 1800
     ACCIDENT_GEN_ROAD_TYPE_PROB = [
         (0.45, ("highway.primary", "highway.primary_link",)),
