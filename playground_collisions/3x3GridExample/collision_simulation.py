@@ -28,6 +28,36 @@ def run():
     #print(traci.edge.getLaneNumber("-E9"))
     #print(traci.edge.getLaneNumber("E9"))
 
+    # Parameters for non-accident related anomalous driving
+        #   TODO: How many vehicles?
+        #   TODO: How slow?
+    total_cars = 366            # rough estimate of total cars in the simulation
+    sim_duration = 432          # how many steps are in the simulation
+    # Scenario 1 parameters
+    percentage_slowed = 0.2     # percentage of cars that will slow down at some point in the simulation
+    slowdown_min = 3            # minimum amount of time slowed down
+    slowdown_max = 7            # maximum amount of time slowed down
+    slowdown_start = 50         # First step that people could slow down
+    slowdown_stop = 275         # Last step people can slow down
+    slowdown_steps = []         # list of timesteps to select a random vehicle to slow down
+    for i in range(round(percentage_slowed * total_cars)):
+        new_step = randint(slowdown_start, slowdown_stop)
+        while new_step in slowdown_steps:
+            new_step = randint(slowdown_start, slowdown_stop)
+        slowdown_steps.append(new_step)
+    # Scenario 2 parameters
+    percentage_stationary = 0.2    # percentage of cars that will stay statonary on green at some point in the simulation
+    stop_at_light_min = 3            # minimum amount of time slowed down
+    stop_at_light_max = 7            # maximum amount of time slowed down
+    stop_at_light_start = 50         # First step that people could slow down
+    stop_at_light_stop = 275         # Last step people can slow down
+    stop_at_light_steps = []         # list of timesteps to select a random vehicle to slow down
+    for i in range(round(percentage_slowed * total_cars)):
+        new_step = randint(stop_at_light_start, stop_at_light_stop)
+        while new_step in stop_at_light_steps:
+            new_step = randint(stop_at_light_start, stop_at_light_stop)
+        stop_at_light_steps.append(new_step)
+
     # Main simulation loop
     step = 0
     while traci.simulation.getMinExpectedNumber() > 0:
@@ -35,7 +65,7 @@ def run():
         step += 1
 
         # Stop the vehicle, enlarge it to take up multiple lanes, and move it to the middle of the road
-        if step == 5:
+        '''if step == 5:
             ### Stop the vehicle in place and enlarge it ###
             veh_id_list = traci.edge.getLastStepVehicleIDs("-E9")
             accident_ID = str(veh_id_list[0])
@@ -62,7 +92,30 @@ def run():
             # Clear the accident 10 steps later
             print(traci.vehicle.getPosition(accident_ID))
             traci.vehicle.remove(accident_ID, 3)
-            print("Accident cleared", accident_ID)
+            print("Accident cleared", accident_ID)'''
+
+        # Non-accident related anomalous driving scenarios
+        #   Scenario 1: Drivers slowing down below the speed limit
+        #   Scenario 2: Drivers waiting at a green light because they aren't paying attention
+        #   Scenario 3: Change traffic lights to cause anomalous behavior
+        # Scenario 1
+        if step in slowdown_steps:
+            veh_id_list = traci.vehicle.getIDList()
+            slow_id = str(veh_id_list[randint(0, len(veh_id_list)-1)])
+            current_lane = traci.vehicle.getLaneID(slow_id)
+            speed_limit = traci.lane.getMaxSpeed(current_lane)
+            traci.vehicle.slowDown(slow_id, 0.01 * speed_limit, randint(slowdown_min, slowdown_max))
+        # Scenario 2 (Work in progress, need to find a car stopped at a light efficiently)
+        if step in stop_at_light_steps:
+            veh_id_list = traci.vehicle.getIDList()
+            # Find a vehicle that is stopped
+            random_id = randint(0, len(veh_id_list)-1)
+            stop_id = str(veh_id_list[random_id])
+            while not traci.vehicle.isStopped(stop_id):
+                random_id += 1
+                stop_id = str(veh_id_list[random_id])
+                print(stop_id)
+            traci.vehicle.slowDown(stop_id, 10)
 
         # Log all accidents that happen in the console
         if traci.simulation.getCollidingVehiclesNumber() > 0:
