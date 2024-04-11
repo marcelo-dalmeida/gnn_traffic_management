@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix, f1_score
 
 import config
+from const import CONST
 
 
 # log string
@@ -65,13 +66,14 @@ def seq2instance(data, P, Q):
 def loadData(dataset_file, attribute):
 
     traffic_patterns = {
-        'regular': 0,
-        'non-accident anomalous': 1,
-        'accident anomalous': 2
+        CONST.REGULAR_TRAFFIC: 0,
+        CONST.ANOMALOUS_TRAFFIC: 1,
+        CONST.ACCIDENT_BASED_ANOMALOUS_TRAFFIC: 2
     }
 
     # Traffic
     df = pd.read_hdf(os.path.join(config.ROOT_DIR, dataset_file), key='data')
+    df = df.reset_index(level=0)
 
     trafpatY = df.loc[:, 'traffic_pattern'].replace(traffic_patterns).values
 

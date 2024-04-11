@@ -44,7 +44,11 @@ def seq2instance(data, P, Q):
 
 def loadData(dataset_file, attribute):
     # Traffic
-    df = pd.read_hdf(os.path.join(config.ROOT_DIR, dataset_file), key='data').loc[:, attribute]
+    df = pd.read_hdf(os.path.join(config.ROOT_DIR, dataset_file), key='data')
+    df = df.reset_index(level=0)
+
+    df = df.loc[:, attribute]
+
     Traffic = df.values
     # train/val/test 
     num_step = df.shape[0]
