@@ -23,4 +23,8 @@
 		<collision.stoptime value="10"/>
 	</processing>
 
+	<report>
+        <duration-log.statistics value="true"/>
+    </report>
+
 </configuration>
