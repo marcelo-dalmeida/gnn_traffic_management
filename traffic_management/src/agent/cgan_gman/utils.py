@@ -118,14 +118,14 @@ def loadData(dataset_file, attribute):
         SE[index] = temp[1:]
 
     # temporal embedding
-    Time = df.index
+    Time = df.index.drop_duplicates()
     dayofweek = np.reshape(Time.weekday, newshape=(-1, 1))
     Time.freq = pd.infer_freq(Time) if Time.freq is None else Time.freq
     timeofday = (Time.hour * 3600 + Time.minute * 60 + Time.second) // Time.freq.delta.total_seconds()
     timeofday = np.reshape(timeofday, newshape=(-1, 1))
     Time = np.concatenate((dayofweek, timeofday), axis=-1)
     # train/val/test
-    train = Time[: train_steps]
+    train = Time[:train_steps]
     val = Time[train_steps: train_steps + val_steps]
     test = Time[-test_steps:]
     # shape = (num_sample, P + Q, 2)
