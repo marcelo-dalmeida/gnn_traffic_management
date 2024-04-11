@@ -8,7 +8,7 @@ from gensim.models.callbacks import CallbackAny2Vec
 from gensim.models import Word2Vec
 
 import config
-from agent.cgan_gman.node2vec import node2vec
+from agent.gman_classifier.node2vec import node2vec
 
 from utils import xml_util
 from utils.collections_util import bidict

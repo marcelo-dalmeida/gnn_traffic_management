@@ -17,5 +17,6 @@ class GmanConfig(Config):
     PATIENCE = 10
     LEARNING_RATE = 0.001
     DECAY_EPOCH = 5
+    LAMBDA = 100
 
     PREDICTED_ATTRIBUTE = "speed"                       # speed or volume

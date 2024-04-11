@@ -76,7 +76,7 @@ def train():
     disc_pred = disc_pred * std + mean
 
     gen_loss = model.gen_loss(disc_pred, gen_pred, label)
-    disc_loss = model.disc_loss(disc_pred, disc_pred)
+    disc_loss = model.disc_loss(disc_pred, disc_pred, trafpatY)
 
     tf.compat.v1.add_to_collection('gen_pred', gen_pred)
     tf.compat.v1.add_to_collection('gen_loss', gen_loss)
