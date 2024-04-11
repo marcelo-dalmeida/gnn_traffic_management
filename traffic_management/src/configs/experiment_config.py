@@ -3,6 +3,7 @@ import time
 import warnings
 
 from configs.config import Config
+from const import CONST
 
 
 class ExperimentConfig(Config):
@@ -22,6 +23,7 @@ class ExperimentConfig(Config):
 
     DATA_GENERATION_RUN_COUNTS = 3600 * 24
     MODEL_NAME = "Gman"
+    TRAFFIC_PATTERNS = [CONST.REGULAR_TRAFFIC, CONST.ANOMALOUS_TRAFFIC, CONST.ACCIDENT_BASED_ANOMALOUS_TRAFFIC]
     DEBUG = False
     TIME = "00:00:00"
 

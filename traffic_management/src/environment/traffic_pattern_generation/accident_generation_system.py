@@ -58,7 +58,7 @@ class AccidentGenerationSystem:
         self._accident_counter = 0
 
     def start(self):
-        self._accident_gen_cooldown = config.ENVIRONMENT.ACCIDENT_GEN_WARMUP + 1
+        self._accident_gen_cooldown = config.ENVIRONMENT.ACCIDENT_GEN_WARMUP
 
     def step_environment(self):
         remove_accidents = []
@@ -72,6 +72,8 @@ class AccidentGenerationSystem:
 
         if self._accident_gen_cooldown > 0:
             self._accident_gen_cooldown -= 1
+
+    def step_control(self):
         if self._accident_gen_cooldown == 0:
             self.generate_accident()
             self._accident_gen_cooldown = config.ENVIRONMENT.ACCIDENT_GEN_COOLDOWN

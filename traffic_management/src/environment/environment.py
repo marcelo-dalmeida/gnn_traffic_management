@@ -1,6 +1,7 @@
 import os
 
 import config
+from const import CONST
 from environment.traffic_pattern_generation.accident_generation_system import AccidentGenerationSystem
 from environment.traffic_detector.intersection_traffic_detector_system import IntersectionTrafficDetectorSystem
 from environment.simulation_data_subscriber import SimulationDataSubscriber, PERSON, EDGE, LANE, \
@@ -51,6 +52,16 @@ class Environment:
         self.accident_generation_system = AccidentGenerationSystem()
         self.slow_down_generation_system = SlowDownGenerationSystem()
 
+        self.traffic_pattern_to_systems = {
+            CONST.ACCIDENT_BASED_ANOMALOUS_TRAFFIC: self.accident_generation_system,
+            CONST.ANOMALOUS_TRAFFIC: self.slow_down_generation_system
+        }
+
+        self.traffic_pattern_generation_systems = {
+            CONST.ACCIDENT_GENERATION_SYSTEM: self.accident_generation_system,
+            CONST.SLOW_DOWN_GENERATION_SYSTEM: self.slow_down_generation_system
+        }
+
         # network attributes
         self._edges = (
                 list(sumo_net_util.get_edge_map(self._net_xml).keys()) +
@@ -95,22 +106,23 @@ class Environment:
             (SIMULATION, self._SIMULATION_VARIABLES_TO_SUBSCRIBE)
         )
 
-    def reset(self, execution_name=None):
+    def reset(self, execution_name=None, traffic_pattern=CONST.REGULAR_TRAFFIC):
         try:
             self._data_subscription.reset(execution_name)
         except AttributeError:
             pass
 
-        self.__reset(execution_name)
+        self.__reset(execution_name, traffic_pattern)
 
-    def __reset(self, execution_name=None):
+    def __reset(self, execution_name=None, traffic_pattern=CONST.REGULAR_TRAFFIC):
 
         self._execution_name = execution_name
+        self._traffic_pattern = traffic_pattern
 
         # basic info
         self.step_ = 0
 
-        self.detector_system.reset(execution_name)
+        self.detector_system.reset(execution_name, traffic_pattern)
         self.accident_generation_system.reset(execution_name)
         self.slow_down_generation_system.reset(execution_name)
 
@@ -144,6 +156,11 @@ class Environment:
         sumo_traci_util.close_connection(self._execution_name)
 
     def step(self, *args, **kwargs):
+
+        if self._traffic_pattern == CONST.ACCIDENT_BASED_ANOMALOUS_TRAFFIC:
+            self.accident_generation_system.step_control()
+        if self._traffic_pattern == CONST.ANOMALOUS_TRAFFIC:
+            self.slow_down_generation_system.step_control()
 
         traci_connection = sumo_traci_util.get_traci_connection(self._execution_name)
         traci_connection.simulationStep()

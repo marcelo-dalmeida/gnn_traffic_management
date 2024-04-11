@@ -43,7 +43,7 @@ class SlowDownGenerationSystem:
         self._slow_downs_counter = 0
 
     def start(self):
-        self._slow_down_gen_cooldown = config.ENVIRONMENT.SLOW_DOWN_GEN_WARMUP + 1
+        self._slow_down_gen_cooldown = config.ENVIRONMENT.SLOW_DOWN_GEN_WARMUP
 
     def step_environment(self):
         remove_stops = []
@@ -57,6 +57,8 @@ class SlowDownGenerationSystem:
 
         if self._slow_down_gen_cooldown > 0:
             self._slow_down_gen_cooldown -= 1
+
+    def step_control(self):
         if self._slow_down_gen_cooldown == 0:
             self.generate_slow_downs()
             self._slow_down_gen_cooldown = config.ENVIRONMENT.SLOW_DOWN_GEN_COOLDOWN

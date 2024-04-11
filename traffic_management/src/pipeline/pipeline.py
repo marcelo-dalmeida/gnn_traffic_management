@@ -2,6 +2,7 @@ import os
 import time
 
 import config
+from const import CONST
 from environment.environment import Environment
 from pipeline.pipeline_utils import dataset_generator
 from utils import simulation_util
@@ -42,8 +43,9 @@ class Pipeline:
 
     def generate_dataset(self):
 
-        dataset_generator.run_simulation(self.env, simulation_warmup=False)
-        dataset_generator.generate_dataset()
+        for traffic_pattern in config.EXPERIMENT.TRAFFIC_PATTERNS:
+            dataset_generator.generate_dataset(self.env, traffic_pattern)
+        dataset_generator.combine_datasets()
         dataset_generator.generate_adjacency_graph(self.env)
         dataset_generator.generate_static_embedding()
 

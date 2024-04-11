@@ -64,8 +64,9 @@ class IntersectionTrafficDetectorSystem:
             (VEHICLE, self._VEHICLE_VARIABLES_TO_SUBSCRIBE)
         )
 
-    def reset(self, execution_name):
+    def reset(self, execution_name, traffic_pattern):
 
+        self._traffic_pattern = traffic_pattern
         for intersection_id, detector in self._traffic_detectors.items():
             detector.reset(execution_name)
 
@@ -137,11 +138,11 @@ class IntersectionTrafficDetectorSystem:
         log_df.index = log_df.index.astype(int)
         log_df.index = pd.to_datetime(log_df.index, unit='s')
 
-        log_df['traffic_pattern'] = 'regular'
+        log_df['traffic_pattern'] = self._traffic_pattern
 
         path_to_log_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA)
         Path(path_to_log_file).mkdir(parents=True, exist_ok=True)
-        log_df.to_hdf(os.path.join(path_to_log_file, f"detector_logs.h5"), key='data')
+        log_df.to_hdf(os.path.join(path_to_log_file, f"{self._traffic_pattern}_detector_logs.h5"), key='data')
 
         for _, detector in self._traffic_detectors.items():
             detector._detector_logs = []

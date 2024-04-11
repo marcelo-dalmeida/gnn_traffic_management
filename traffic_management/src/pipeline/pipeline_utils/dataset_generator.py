@@ -10,15 +10,12 @@ from utils import datetime_util, tqdm_util, xml_util
 from utils.sumo import sumo_net_util
 
 
-def run_simulation(env, simulation_warmup=False):
-
-    if Path(os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, f"detector_logs.h5")).is_file():
-        return
+def run_simulation(env, traffic_pattern, simulation_warmup=False):
 
     env.setup(mode='test')
 
     execution_name = 'dataset_generation'
-    env.reset(execution_name)
+    env.reset(execution_name, traffic_pattern)
 
     time_in_seconds = datetime_util.convert_human_time_to_seconds(config.EXPERIMENT.TIME)
     if simulation_warmup:
@@ -68,19 +65,43 @@ def run_simulation(env, simulation_warmup=False):
     env.end()
 
 
-def generate_dataset():
+def generate_dataset(env, traffic_pattern):
+
+    filename = f"{traffic_pattern}_dataset.h5"
+    if Path(os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, filename)).is_file():
+        return
+
+    run_simulation(env, traffic_pattern, simulation_warmup=False)
+
+    path_to_log_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, f"{traffic_pattern}_detector_logs.h5")
+    detector_logs = pd.read_hdf(path_to_log_file, key='data')
+
+    detector_logs.iloc[:, :-1] = detector_logs.resample('5T', origin='end').mean()
+    detector_logs.dropna(inplace=True)
+    detector_logs.set_index(['traffic_pattern', detector_logs.index], inplace=True)
+
+    path_to_dataset_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, filename)
+    detector_logs.to_hdf(path_to_dataset_file, key='data')
+
+
+def combine_datasets():
 
     filename = "dataset.h5"
     if Path(os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, filename)).is_file():
         return
 
-    path_to_log_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, f"detector_logs.h5")
-    detector_logs = pd.read_hdf(path_to_log_file, key='data')
+    datasets = []
+    for traffic_pattern in config.EXPERIMENT.TRAFFIC_PATTERNS:
+        traffic_pattern_filename = f"{traffic_pattern}_dataset.h5"
+        path_to_dataset = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, traffic_pattern_filename)
 
-    detector_logs.iloc[:, :-1] = detector_logs.resample('5T', origin='end').mean()
+        dataset = pd.read_hdf(path_to_dataset, key='data')
+        datasets.append(dataset)
+
+    df = pd.concat(datasets)
 
     path_to_dataset_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, filename)
-    detector_logs.to_hdf(path_to_dataset_file, key='data')
+    df.to_hdf(path_to_dataset_file, key='data')
 
 
 def generate_adjacency_graph(env):
