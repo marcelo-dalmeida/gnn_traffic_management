@@ -430,6 +430,16 @@ def train():
         log, 'disc average:         %.2f\t\t%.2f\t\t%.2f%%' %
              (disc_average_mae, disc_average_rmse, disc_average_mape * 100))
 
+    # TODO FIX detection times
+    detection_times = [5, 7, 4, 8, 6, 3]
+
+    dr, fpr, f_score, mttd = utils.calculate_detection_metrics(disc_testPred, testtrafpatY, detection_times)
+
+    utils.log_string(log, f"Detection Rate (DR): {dr}")
+    utils.log_string(log, f"False Positive Rate (FPR): {fpr}")
+    utils.log_string(log, f"F-measurement: {f_score}")
+    # utils.log_string(log, f"Mean Time to Detection (MTTD): {mttd} minutes")
+
     end = time.time()
     utils.log_string(log, 'total time: %.1fmin' % ((end - start) / 60))
     sess.close()

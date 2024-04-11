@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import confusion_matrix, f1_score
 
 import config
 
@@ -29,6 +30,25 @@ def metric(pred, label):
         mape = np.nan_to_num(mape * mask)
         mape = np.mean(mape)
     return mae, rmse, mape
+
+
+def calculate_detection_metrics(pred, label, detection_times):
+    # Confusion matrix
+    tn, fp, fn, tp = confusion_matrix(label, pred).ravel()
+
+    # Detection Rate (DR)
+    dr = tp / (tp + fn)
+
+    # False Positive Rate (FPR)
+    fpr = fp / (fp + tn)
+
+    # F-measurement (F-score)
+    f_score = f1_score(label, pred)
+
+    # Mean Time to Detection (MTTD)
+    mttd = np.mean(detection_times)
+
+    return dr, fpr, f_score, mttd
 
 
 def seq2instance(data, P, Q):
