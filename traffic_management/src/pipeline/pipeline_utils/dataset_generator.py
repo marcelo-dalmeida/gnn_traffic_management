@@ -10,11 +10,11 @@ from utils import datetime_util, tqdm_util, xml_util
 from utils.sumo import sumo_net_util
 
 
-def run_simulation(env, traffic_pattern, simulation_warmup=False):
+def run_simulation(env, traffic_pattern, generator_id, simulation_warmup=False):
 
     env.setup(mode='test')
 
-    execution_name = 'dataset_generation'
+    execution_name = f'dataset_generation_{generator_id}'
     env.reset(execution_name, traffic_pattern)
 
     time_in_seconds = datetime_util.convert_human_time_to_seconds(config.EXPERIMENT.TIME)
@@ -35,9 +35,9 @@ def run_simulation(env, traffic_pattern, simulation_warmup=False):
         env.simulation_warmup = True
         with tqdm_util.std_out_err_redirect_tqdm() as orig_stdout:
             with tqdm(
-                    desc=f"Dataset Generation (warmup), {time_in_seconds}",
+                    desc=f"Dataset Generation for {traffic_pattern} (warmup), {time_in_seconds}",
                     total=config.EXPERIMENT.DATA_GENERATION_RUN_COUNTS,
-                    position=0,
+                    position=generator_id,
                     file=orig_stdout,
                     dynamic_ncols=True
             ) as pbar:
@@ -51,9 +51,9 @@ def run_simulation(env, traffic_pattern, simulation_warmup=False):
     step = 0
     with tqdm_util.std_out_err_redirect_tqdm() as orig_stdout:
         with tqdm(
-                desc=f"Dataset Generation , {time_in_seconds}",
+                desc=f"Dataset Generation for {traffic_pattern}, {time_in_seconds}",
                 total=config.EXPERIMENT.DATA_GENERATION_RUN_COUNTS,
-                position=0,
+                position=generator_id,
                 file=orig_stdout,
                 dynamic_ncols=True
         ) as pbar:
@@ -65,13 +65,13 @@ def run_simulation(env, traffic_pattern, simulation_warmup=False):
     env.end()
 
 
-def generate_dataset(env, traffic_pattern):
+def generate_dataset(env, traffic_pattern, generator_id=0):
 
     filename = f"{traffic_pattern}_dataset.h5"
     if Path(os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, filename)).is_file():
         return
 
-    run_simulation(env, traffic_pattern, simulation_warmup=False)
+    run_simulation(env, traffic_pattern, generator_id=generator_id, simulation_warmup=False)
 
     path_to_log_file = os.path.join(config.ROOT_DIR, config.PATH_TO_DATA, f"{traffic_pattern}_detector_logs.h5")
     detector_logs = pd.read_hdf(path_to_log_file, key='data')
