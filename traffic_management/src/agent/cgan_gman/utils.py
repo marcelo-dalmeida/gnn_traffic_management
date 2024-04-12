@@ -71,15 +71,15 @@ def count_continuous_freq(arr):
     return np.array(items), np.array(counts)
 
 
-def seq2instance(data, P, Q, trafpatY):
+def seq2instance(data, P, Q, trafpatY_label):
 
-    items, counts = count_continuous_freq(trafpatY)
+    items, counts = count_continuous_freq(trafpatY_label)
 
     num_step, dims = data.shape
     num_samples = counts - P - Q + 1
     x = np.zeros(shape=(sum(num_samples), P, dims))
     y = np.zeros(shape=(sum(num_samples), Q, dims))
-    trafpatY_label = np.zeros(shape=(sum(num_samples), Q))
+    trafpatY = np.zeros(shape=(sum(num_samples)))
 
     total = 0
     for num_sample in num_samples:
@@ -87,13 +87,11 @@ def seq2instance(data, P, Q, trafpatY):
             k = total + i
             x[k] = data[k: k + P]
             y[k] = data[k + P: k + P + Q]
-            trafpatY_label[k] = trafpatY[k + P: k + P + Q]
+            trafpatY[k] = trafpatY_label[k + P + Q]
 
         total += num_sample
 
-    trafpatY_label = np.expand_dims(trafpatY_label, -1)
-
-    return x, y, trafpatY_label
+    return x, y, trafpatY
 
 
 def loadData(dataset_file, attribute):
@@ -107,7 +105,8 @@ def loadData(dataset_file, attribute):
     # Traffic
     df = pd.read_hdf(os.path.join(config.ROOT_DIR, dataset_file), key='data')
     df = df.reset_index(level=0)
-
+    df['traffic_pattern'] = [CONST.REGULAR_TRAFFIC] * (len(df) // 3) + [CONST.ANOMALOUS_TRAFFIC] * (len(df) // 3) + [
+        CONST.ACCIDENT_BASED_ANOMALOUS_TRAFFIC] * (len(df) // 3)
     df = df.sort_index()
 
     df.loc[:, 'traffic_pattern'] = df.loc[:, 'traffic_pattern'].replace(traffic_patterns)

@@ -26,7 +26,7 @@ def train():
     utils.log_string(log, 'loading data...')
     (trainX, trainTE, trainY, traintrafpatY, valX, valTE, valY, valtrafpatY, testX, testTE, testY, testtrafpatY, SE,
      mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
-    utils.log_string(log, 'trainX: %s\ttrainY: %s' % (trainX.shape, trainY.shape))
+    utils.log_string(log, 'trainX: %s\t\ttrainY: %s' % (trainX.shape, trainY.shape))
     utils.log_string(log, 'valX:   %s\t\tvalY:   %s' % (valX.shape, valY.shape))
     utils.log_string(log, 'testX:  %s\t\ttestY:  %s' % (testX.shape, testY.shape))
     utils.log_string(log, 'data loaded!')

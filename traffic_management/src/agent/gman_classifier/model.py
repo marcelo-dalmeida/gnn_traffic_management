@@ -293,6 +293,9 @@ def GMAN_clas(X, TE, SE, T, bn, bn_decay, is_training):
 
 def clas_loss(pred, trafpatY):
 
+    # trafpat
+    trafpatY = tf.one_hot(trafpatY, depth=3)
+
     classification_loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)(trafpatY, pred)
 
     return classification_loss

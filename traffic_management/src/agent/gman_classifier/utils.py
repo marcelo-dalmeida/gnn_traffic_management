@@ -52,15 +52,46 @@ def calculate_detection_metrics(pred, label, detection_times):
     return dr, fpr, f_score, mttd
 
 
-def seq2instance(data, P, Q):
+def count_continuous_freq(arr):
+    count = 0
+    items = []
+    counts = []
+
+    for i in range(0, len(arr)-1):
+        if arr[i] == arr[i+1]:
+            count += 1
+        else:
+            items.append(arr[i])
+            counts.append(count)
+            count = 0
+
+    items.append(arr[len(arr)-1])
+    counts.append(count)
+
+    return np.array(items), np.array(counts)
+
+
+def seq2instance(data, P, Q, trafpatY_label):
+
+    items, counts = count_continuous_freq(trafpatY_label)
+
     num_step, dims = data.shape
-    num_sample = num_step - P - Q + 1
-    x = np.zeros(shape=(num_sample, P, dims))
-    y = np.zeros(shape=(num_sample, Q, dims))
-    for i in range(num_sample):
-        x[i] = data[i: i + P]
-        y[i] = data[i + P: i + P + Q]
-    return x, y
+    num_samples = counts - P - Q + 1
+    x = np.zeros(shape=(sum(num_samples), P, dims))
+    y = np.zeros(shape=(sum(num_samples), Q, dims))
+    trafpatY = np.zeros(shape=(sum(num_samples)))
+
+    total = 0
+    for num_sample in num_samples:
+        for i in range(num_sample):
+            k = total + i
+            x[k] = data[k: k + P]
+            y[k] = data[k + P: k + P + Q]
+            trafpatY[k] = trafpatY_label[k + P + Q]
+
+        total += num_sample
+
+    return x, y, trafpatY
 
 
 def loadData(dataset_file, attribute):
@@ -74,7 +105,8 @@ def loadData(dataset_file, attribute):
     # Traffic
     df = pd.read_hdf(os.path.join(config.ROOT_DIR, dataset_file), key='data')
     df = df.reset_index(level=0)
-
+    df['traffic_pattern'] = [CONST.REGULAR_TRAFFIC] * (len(df) // 3) + [CONST.ANOMALOUS_TRAFFIC] * (len(df) // 3) + [
+        CONST.ACCIDENT_BASED_ANOMALOUS_TRAFFIC] * (len(df) // 3)
     df = df.sort_index()
 
     df.loc[:, 'traffic_pattern'] = df.loc[:, 'traffic_pattern'].replace(traffic_patterns)

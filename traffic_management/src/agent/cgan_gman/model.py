@@ -432,9 +432,10 @@ def GMAN_disc(X, gen_out, TE, genTE, SE, T, bn, bn_decay, is_training):
 
     X = tf.reshape(X, (-1, Q * N))
 
+    real_or_fake = tf.keras.layers.Dense(1, activation='sigmoid')(X)
     trafpatY = tf.keras.layers.Dense(3, activation='softmax')(X)
 
-    return trafpatY
+    return real_or_fake, trafpatY
 
 
 def mae_loss(pred, label):
@@ -464,15 +465,18 @@ def gen_loss(disc_generated_output, gen_output, target):
     #return total_gen_loss, gan_loss, l1_loss
 
 
-def disc_loss(disc_real_output, disc_generated_output, trafpatY):
+def disc_loss(disc_real_output, disc_generated_output, disc_real_clas, disc_generated_clas, trafpatY):
     real_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)(
         tf.ones_like(disc_real_output), disc_real_output)
 
     generated_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)(
         tf.zeros_like(disc_generated_output), disc_generated_output)
 
-    real_clas_loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)(trafpatY, disc_real_output)
-    generated_clas_loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)(trafpatY, disc_generated_output)
+    # trafpat
+    trafpatY = tf.one_hot(trafpatY, depth=3)
+
+    real_clas_loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)(trafpatY, disc_real_clas)
+    generated_clas_loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)(trafpatY, disc_generated_clas)
 
     total_disc_loss = real_loss + generated_loss + real_clas_loss + generated_clas_loss
 

@@ -26,7 +26,7 @@ def train():
     utils.log_string(log, 'loading data...')
     (trainX, trainTE, trainY, traintrafpatY, valX, valTE, valY, valtrafpatY, testX, testTE, testY, testtrafpatY, SE,
      mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
-    utils.log_string(log, 'trainX: %s\ttrainY: %s' % (trainX.shape, trainY.shape))
+    utils.log_string(log, 'trainX: %s\t\ttrainY: %s' % (trainX.shape, trainY.shape))
     utils.log_string(log, 'valX:   %s\t\tvalY:   %s' % (valX.shape, valY.shape))
     utils.log_string(log, 'testX:  %s\t\ttestY:  %s' % (testX.shape, testY.shape))
     utils.log_string(log, 'data loaded!')
@@ -60,7 +60,7 @@ def train():
         bn_decay=bn_decay,
         is_training=is_training
     )
-    disc_pred = model.GMAN_disc(
+    disc_real_fake_pred, disc_clas_pred = model.GMAN_disc(
         X,
         gen_out,
         TE,
@@ -73,14 +73,14 @@ def train():
     )
 
     gen_pred = gen_pred * std + mean
-    disc_pred = disc_pred * std + mean
 
-    gen_loss = model.gen_loss(disc_pred, gen_pred, label)
-    disc_loss = model.disc_loss(disc_pred, disc_pred, trafpatY)
+    gen_loss = model.gen_loss(disc_real_fake_pred, gen_pred, label)
+    disc_loss = model.disc_loss(disc_real_fake_pred, disc_real_fake_pred, disc_clas_pred, disc_clas_pred, trafpatY)
 
     tf.compat.v1.add_to_collection('gen_pred', gen_pred)
     tf.compat.v1.add_to_collection('gen_loss', gen_loss)
-    tf.compat.v1.add_to_collection('disc_pred', disc_pred)
+    tf.compat.v1.add_to_collection('disc_real_fake_pred', disc_real_fake_pred)
+    tf.compat.v1.add_to_collection('disc_clas_pred', disc_clas_pred)
     tf.compat.v1.add_to_collection('disc_loss', disc_loss)
 
     learning_rate = tf.compat.v1.train.exponential_decay(
@@ -149,6 +149,7 @@ def train():
         trainX = trainX[permutation]
         trainTE = trainTE[permutation]
         trainY = trainY[permutation]
+        traintrafpatY = traintrafpatY[permutation]
 
         # train loss
         start_train = time.time()
@@ -281,7 +282,8 @@ def train():
     utils.log_string(log, 'evaluating...')
     num_test = testX.shape[0]
     gen_trainPred = []
-    disc_trainPred = []
+    disc_output_trainPred = []
+    disc_clas_trainPred = []
     num_batch = math.ceil(num_train / config.AGENT.BATCH_SIZE)
     for batch_idx in range(num_batch):
         start_idx = batch_idx * config.AGENT.BATCH_SIZE
@@ -304,15 +306,19 @@ def train():
             is_training: False
         }
 
-        disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
+        disc_generated_output, disc_generated_clas = sess.run(
+            [disc_real_fake_pred, disc_clas_pred], feed_dict=disc_generated_feed_dict)
 
         gen_trainPred.append(gen_output)
-        disc_trainPred.append(disc_generated_output)
+        disc_output_trainPred.append(disc_generated_output)
+        disc_clas_trainPred.append(disc_generated_clas)
     gen_trainPred = np.concatenate(gen_trainPred, axis=0)
-    disc_trainPred = np.concatenate(disc_trainPred, axis=0)
+    disc_output_trainPred = np.concatenate(disc_output_trainPred, axis=0)
+    disc_clas_trainPred = np.concatenate(disc_clas_trainPred, axis=0)
 
     gen_valPred = []
-    disc_valPred = []
+    disc_output_valPred = []
+    disc_clas_valPred = []
     num_batch = math.ceil(num_val / config.AGENT.BATCH_SIZE)
     for batch_idx in range(num_batch):
         start_idx = batch_idx * config.AGENT.BATCH_SIZE
@@ -335,15 +341,19 @@ def train():
             is_training: False
         }
 
-        disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
+        disc_generated_output, disc_generated_clas = sess.run(
+            [disc_real_fake_pred, disc_clas_pred], feed_dict=disc_generated_feed_dict)
 
         gen_valPred.append(gen_output)
-        disc_valPred.append(disc_generated_output)
+        disc_output_valPred.append(disc_generated_output)
+        disc_clas_valPred.append(disc_generated_clas)
     gen_valPred = np.concatenate(gen_valPred, axis=0)
-    disc_valPred = np.concatenate(disc_valPred, axis=0)
+    disc_output_valPred = np.concatenate(disc_output_valPred, axis=0)
+    disc_clas_valPred = np.concatenate(disc_clas_valPred, axis=0)
 
     gen_testPred = []
-    disc_testPred = []
+    disc_output_testPred = []
+    disc_clas_testPred = []
     num_batch = math.ceil(num_test / config.AGENT.BATCH_SIZE)
     start_test = time.time()
     for batch_idx in range(num_batch):
@@ -367,13 +377,16 @@ def train():
             is_training: False
         }
 
-        disc_generated_output = sess.run(disc_pred, feed_dict=disc_generated_feed_dict)
+        disc_generated_output, disc_generated_clas = sess.run(
+            [disc_real_fake_pred, disc_clas_pred], feed_dict=disc_generated_feed_dict)
 
         gen_testPred.append(gen_output)
-        disc_testPred.append(disc_generated_output)
+        disc_output_testPred.append(disc_generated_output)
+        disc_clas_testPred.append(disc_generated_clas)
     end_test = time.time()
     gen_testPred = np.concatenate(gen_testPred, axis=0)
-    disc_testPred = np.concatenate(disc_testPred, axis=0)
+    disc_output_testPred = np.concatenate(disc_output_testPred, axis=0)
+    disc_clas_testPred = np.concatenate(disc_clas_testPred, axis=0)
 
     # summary
     gen_train_mae, gen_train_rmse, gen_train_mape = utils.metric(gen_trainPred, trainY)
@@ -403,37 +416,37 @@ def train():
         log, 'gen average:         %.2f\t\t%.2f\t\t%.2f%%' %
              (gen_average_mae, gen_average_rmse, gen_average_mape * 100))
 
-    disc_train_mae, disc_train_rmse, disc_train_mape = utils.metric(disc_trainPred, traintrafpatY)
-    disc_val_mae, disc_val_rmse, disc_val_mape = utils.metric(disc_valPred, valtrafpatY)
-    disc_test_mae, disc_test_rmse, disc_test_mape = utils.metric(disc_testPred, testtrafpatY)
-    utils.log_string(log, 'disc testing time: %.1fs' % (end_test - start_test))
-    utils.log_string(log, '                MAE\t\tRMSE\t\tMAPE')
-    utils.log_string(log, 'disc train            %.2f\t\t%.2f\t\t%.2f%%' %
-                     (disc_train_mae, disc_train_rmse, disc_train_mape * 100))
-    utils.log_string(log, 'disc val              %.2f\t\t%.2f\t\t%.2f%%' %
-                     (disc_val_mae, disc_val_rmse, disc_val_mape * 100))
-    utils.log_string(log, 'disc test             %.2f\t\t%.2f\t\t%.2f%%' %
-                     (disc_test_mae, disc_test_rmse, disc_test_mape * 100))
-    utils.log_string(log, 'disc performance in each prediction step')
-    disc_MAE, disc_RMSE, disc_MAPE = [], [], []
-    for q in range(config.AGENT.PREDICTION_STEPS):
-        disc_mae, disc_rmse, disc_mape = utils.metric(disc_testPred[:, q], testtrafpatY[:, q])
-        disc_MAE.append(disc_mae)
-        disc_RMSE.append(disc_rmse)
-        disc_MAPE.append(disc_mape)
-        utils.log_string(log, 'disc step: %02d         %.2f\t\t%.2f\t\t%.2f%%' %
-                         (q + 1, disc_mae, disc_rmse, disc_mape * 100))
-    disc_average_mae = np.mean(disc_MAE)
-    disc_average_rmse = np.mean(disc_RMSE)
-    disc_average_mape = np.mean(disc_MAPE)
-    utils.log_string(
-        log, 'disc average:         %.2f\t\t%.2f\t\t%.2f%%' %
-             (disc_average_mae, disc_average_rmse, disc_average_mape * 100))
+    # disc_train_mae, disc_train_rmse, disc_train_mape = utils.metric(disc_clas_trainPred, traintrafpatY)
+    # disc_val_mae, disc_val_rmse, disc_val_mape = utils.metric(disc_clas_valPred, valtrafpatY)
+    # disc_test_mae, disc_test_rmse, disc_test_mape = utils.metric(disc_clas_testPred, testtrafpatY)
+    # utils.log_string(log, 'disc testing time: %.1fs' % (end_test - start_test))
+    # utils.log_string(log, '                MAE\t\tRMSE\t\tMAPE')
+    # utils.log_string(log, 'disc train            %.2f\t\t%.2f\t\t%.2f%%' %
+    #                  (disc_train_mae, disc_train_rmse, disc_train_mape * 100))
+    # utils.log_string(log, 'disc val              %.2f\t\t%.2f\t\t%.2f%%' %
+    #                  (disc_val_mae, disc_val_rmse, disc_val_mape * 100))
+    # utils.log_string(log, 'disc test             %.2f\t\t%.2f\t\t%.2f%%' %
+    #                  (disc_test_mae, disc_test_rmse, disc_test_mape * 100))
+    # utils.log_string(log, 'disc performance in each prediction step')
+    # disc_MAE, disc_RMSE, disc_MAPE = [], [], []
+    # for q in range(config.AGENT.PREDICTION_STEPS):
+    #     disc_mae, disc_rmse, disc_mape = utils.metric(disc_clas_testPred[:, q], testtrafpatY[:, q])
+    #     disc_MAE.append(disc_mae)
+    #     disc_RMSE.append(disc_rmse)
+    #     disc_MAPE.append(disc_mape)
+    #     utils.log_string(log, 'disc step: %02d         %.2f\t\t%.2f\t\t%.2f%%' %
+    #                      (q + 1, disc_mae, disc_rmse, disc_mape * 100))
+    # disc_average_mae = np.mean(disc_MAE)
+    # disc_average_rmse = np.mean(disc_RMSE)
+    # disc_average_mape = np.mean(disc_MAPE)
+    # utils.log_string(
+    #     log, 'disc average:         %.2f\t\t%.2f\t\t%.2f%%' %
+    #          (disc_average_mae, disc_average_rmse, disc_average_mape * 100))
 
     # TODO FIX detection times
     detection_times = [5, 7, 4, 8, 6, 3]
 
-    dr, fpr, f_score, mttd = utils.calculate_detection_metrics(disc_testPred, testtrafpatY, detection_times)
+    dr, fpr, f_score, mttd = utils.calculate_detection_metrics(disc_clas_testPred, testtrafpatY, detection_times)
 
     utils.log_string(log, f"Detection Rate (DR): {dr}")
     utils.log_string(log, f"False Positive Rate (FPR): {fpr}")
