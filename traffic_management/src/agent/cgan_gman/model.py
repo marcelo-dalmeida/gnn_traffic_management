@@ -10,7 +10,7 @@ def placeholder(P, Q, N):
     TE = tf.compat.v1.placeholder(
         shape=(None, P + Q, 2), dtype=tf.int32, name='TE')
     trafpatY = tf.compat.v1.placeholder(
-        shape=(1), dtype=tf.int32, name='trafpatY')
+        shape=(None, 1), dtype=tf.int32, name='trafpatY')
     genTE = tf.compat.v1.placeholder(
         shape=(None, P + Q, 2), dtype=tf.int32, name='genTE')
     label = tf.compat.v1.placeholder(
@@ -247,6 +247,7 @@ def trafpat_transformAttention(X, STE_P, STE_Q, trafpat, K, d, bn, bn_decay, is_
     X:      [batch_size, P, N, D]
     STE_P:  [batch_size, P, N, D]
     STE_Q:  [batch_size, Q, N, D]
+    trafpat [batch_size, 1, 1, D]
     K:      number of attention heads
     d:      dimension of each attention outputs
     return: [batch_size, Q, N, D]
@@ -254,8 +255,13 @@ def trafpat_transformAttention(X, STE_P, STE_Q, trafpat, K, d, bn, bn_decay, is_
 
     dense_layer = tf.keras.layers.Dense(d)
     transformed_trafpat = dense_layer(trafpat)
+    transformed_trafpat = tf.expand_dims(transformed_trafpat, axis=1)
 
     D = K * d
+
+    transformed_trafpat = FC(
+        transformed_trafpat, units=D, activations=tf.nn.relu,
+        bn=bn, bn_decay=bn_decay, is_training=is_training)
 
     # query: [batch_size, Q, N, K * d]
     # key:   [batch_size, P, N, K * d]
@@ -272,6 +278,7 @@ def trafpat_transformAttention(X, STE_P, STE_Q, trafpat, K, d, bn, bn_decay, is_
     # query: [K * batch_size, Q, N, d]
     # key:   [K * batch_size, P, N, d]
     # value: [K * batch_size, P, N, d]
+    transformed_trafpat = tf.concat(tf.split(transformed_trafpat, K, axis=-1), axis=0)
     query = tf.concat(tf.split(query, K, axis=-1), axis=0)
     key = tf.concat(tf.split(key, K, axis=-1), axis=0)
     value = tf.concat(tf.split(value, K, axis=-1), axis=0)

@@ -142,7 +142,7 @@ def train():
             clas_feed_dict = {
                 X: trainX[start_idx:end_idx],
                 TE: trainTE[start_idx:end_idx],
-                trafpatY: traintrafpatY[start_idx:start_idx+1],
+                trafpatY: traintrafpatY[start_idx:end_idx],
                 is_training: True
             }
             _, clas_total_loss = sess.run([clas_train_op, clas_loss], feed_dict=clas_feed_dict)

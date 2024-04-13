@@ -10,7 +10,7 @@ def placeholder(P, Q, N):
     TE = tf.compat.v1.placeholder(
         shape=(None, P + Q, 2), dtype=tf.int32, name='TE')
     trafpatY = tf.compat.v1.placeholder(
-        shape=(1), dtype=tf.int32, name='trafpatY')
+        shape=(None, 1), dtype=tf.int32, name='trafpatY')
     is_training = tf.compat.v1.placeholder(
         shape=(), dtype=tf.bool, name='is_training')
     return X, TE, trafpatY, is_training

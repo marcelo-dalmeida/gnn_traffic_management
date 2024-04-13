@@ -79,7 +79,7 @@ def seq2instance(data, P, Q, trafpatY_label):
     num_samples = counts - P - Q + 1
     x = np.zeros(shape=(sum(num_samples), P, dims))
     y = np.zeros(shape=(sum(num_samples), Q, dims))
-    trafpatY = np.zeros(shape=(sum(num_samples)))
+    trafpatY = np.zeros(shape=(sum(num_samples), 1))
 
     total = 0
     for num_sample in num_samples:

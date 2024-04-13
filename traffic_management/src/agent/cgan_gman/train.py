@@ -163,7 +163,7 @@ def train():
             gen_feed_dict = {
                 X: trainX[start_idx:end_idx],
                 TE: trainTE[start_idx:end_idx],
-                trafpatY: traintrafpatY[start_idx:start_idx+1],
+                trafpatY: traintrafpatY[start_idx:end_idx],
                 label: trainY[start_idx:end_idx],
                 is_training: True
             }
@@ -174,7 +174,7 @@ def train():
                 gen_out: trainY[start_idx:end_idx],
                 TE: trainTE[start_idx:end_idx],
                 genTE: trainTE[start_idx:end_idx],
-                trafpatY: traintrafpatY[start_idx:start_idx+1],
+                trafpatY: traintrafpatY[start_idx:end_idx],
                 is_training: True
             }
 
@@ -185,7 +185,7 @@ def train():
                 gen_out: gen_output,
                 TE: trainTE[start_idx:end_idx],
                 genTE: trainTE[start_idx:end_idx],
-                trafpatY: traintrafpatY[start_idx:start_idx+1],
+                trafpatY: traintrafpatY[start_idx:end_idx],
                 is_training: True
             }
 
