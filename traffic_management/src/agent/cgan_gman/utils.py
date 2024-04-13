@@ -34,17 +34,28 @@ def metric(pred, label):
 
 
 def calculate_detection_metrics(pred, label, detection_times):
-    # Confusion matrix
-    tn, fp, fn, tp = confusion_matrix(label, pred).ravel()
 
-    # Detection Rate (DR)
-    dr = tp / (tp + fn)
+    pred_class = np.argmax(pred, axis=-1)
 
-    # False Positive Rate (FPR)
-    fpr = fp / (fp + tn)
+    num_classes = int(np.max(label) + 1)
 
-    # F-measurement (F-score)
-    f_score = f1_score(label, pred)
+    dr = np.zeros(num_classes)
+    fpr = np.zeros(num_classes)
+    f_score = np.zeros(num_classes)
+
+    # Calculate metrics for each class
+    for i in range(num_classes):
+        # Confusion matrix
+        tn, fp, fn, tp = confusion_matrix(label==i, pred_class==i).ravel()
+
+        # Detection Rate (DR)
+        dr[i] = tp / (tp + fn)
+
+        # False Positive Rate (FPR)
+        fpr[i] = fp / (fp + tn)
+
+        # F-measurement (F-score)
+        f_score[i] = f1_score(label==i, pred_class==i)
 
     # Mean Time to Detection (MTTD)
     mttd = np.mean(detection_times)

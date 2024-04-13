@@ -123,7 +123,7 @@ def train():
         if wait >= config.AGENT.PATIENCE:
             utils.log_string(log, 'early stop at epoch: %04d' % (epoch))
             with open(os.path.join(config.ROOT_DIR, config.PATH_TO_RECORDS, 'epochs.txt'), "a+") as file:
-                file.write(f"early_stop\n")
+                file.write(f"early_stop")
             break
         # shuffle
         permutation = np.random.permutation(num_train)
@@ -194,6 +194,15 @@ def train():
             saver.save(sess, os.path.join(config.ROOT_DIR, model_file))
         else:
             wait += 1
+
+    utils.log_string(log, 'loading data...')
+    (trainX, trainTE, trainY, traintrafpatY, valX, valTE, valY, valtrafpatY, testX, testTE, testY, testtrafpatY, SE,
+     mean, std) = utils.loadData(dataset_file, config.AGENT.PREDICTED_ATTRIBUTE)
+    num_train, num_val, num_test = trainX.shape[0], valX.shape[0], testX.shape[0]
+    utils.log_string(log, 'trainX: %s\ttrainY: %s' % (trainX.shape, trainY.shape))
+    utils.log_string(log, 'valX:   %s\t\tvalY:   %s' % (valX.shape, valY.shape))
+    utils.log_string(log, 'testX:  %s\t\ttestY:  %s' % (testX.shape, testY.shape))
+    utils.log_string(log, 'data loaded!')
 
     # test model
     utils.log_string(log, '**** testing model ****')
@@ -285,15 +294,36 @@ def train():
         log, 'clas average:         %.2f\t\t%.2f\t\t%.2f%%' %
              (clas_average_mae, clas_average_rmse, clas_average_mape * 100))
 
+    traintrafpatY, valtrafpatY, testtrafpatY = traintrafpatY.reshape(-1), valtrafpatY.reshape(-1), testtrafpatY.reshape(-1)
+
     # TODO FIX detection times
     detection_times = [5, 7, 4, 8, 6, 3]
 
     dr, fpr, f_score, mttd = utils.calculate_detection_metrics(clas_testPred, testtrafpatY, detection_times)
 
-    utils.log_string(log, f"Detection Rate (DR): {dr}")
-    utils.log_string(log, f"False Positive Rate (FPR): {fpr}")
-    utils.log_string(log, f"F-measurement: {f_score}")
-    # utils.log_string(log, f"Mean Time to Detection (MTTD): {mttd} minutes")
+    train_dr, train_fpr, train_f_score, train_mttd = utils.calculate_detection_metrics(clas_trainPred, traintrafpatY, detection_times)
+    val_dr, val_fpr, val_f_score, val_mttd = utils.calculate_detection_metrics(clas_valPred, valtrafpatY, detection_times)
+    test_dr, test_fpr, test_f_score, test_mttd = utils.calculate_detection_metrics(clas_testPred, testtrafpatY, detection_times)
+
+    utils.log_string(log, "Class")
+
+    utils.log_string(log, "Train")
+    utils.log_string(log, f"Detection Rate (DR): {train_dr}")
+    utils.log_string(log, f"False Positive Rate (FPR): {train_fpr}")
+    utils.log_string(log, f"F-measurement: {train_f_score}")
+    # utils.log_string(log, f"Mean Time to Detection (MTTD): {val_mttd} minutes")
+
+    utils.log_string(log, "Val")
+    utils.log_string(log, f"Detection Rate (DR): {val_dr}")
+    utils.log_string(log, f"False Positive Rate (FPR): {val_fpr}")
+    utils.log_string(log, f"F-measurement: {val_f_score}")
+    # utils.log_string(log, f"Mean Time to Detection (MTTD): {val_mttd} minutes")
+
+    utils.log_string(log, "Test")
+    utils.log_string(log, f"Detection Rate (DR): {test_dr}")
+    utils.log_string(log, f"False Positive Rate (FPR): {test_fpr}")
+    utils.log_string(log, f"F-measurement: {test_f_score}")
+    # utils.log_string(log, f"Mean Time to Detection (MTTD): {test_mttd} minutes"))
 
     end = time.time()
     utils.log_string(log, 'total time: %.1fmin' % ((end - start) / 60))
