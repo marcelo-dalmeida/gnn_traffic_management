@@ -8,6 +8,7 @@ from environment.environment import Environment
 from pipeline.pipeline_utils import dataset_generator
 from utils import simulation_util
 
+import agent.gman_classifier.train as gman_classifier_train
 import agent.cgan_gman.train as cgan_gman_train
 import agent.gman.train as gman_train
 import agent.gman.test as gman_test

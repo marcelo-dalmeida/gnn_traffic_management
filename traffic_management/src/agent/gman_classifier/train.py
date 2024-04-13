@@ -50,7 +50,7 @@ def train():
 
     bn_decay = tf.minimum(0.99, 1 - bn_momentum)
 
-    clas_pred = model.GMAN_class(
+    clas_pred = model.GMAN_clas(
         X,
         TE,
         SE,
